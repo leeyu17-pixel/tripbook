@@ -1,0 +1,653 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title id="page-title">旅行手册</title>
+  <style>
+    :root {
+      --bg: #f7f6f1;
+      --card-bg: #ffffff;
+      --text-main: #2d2b28;
+      --text-sub: #7a766e;
+      --text-muted: #a39f96;
+      --border: #ebe8de;
+      --border-inner: #f0ede4;
+      --accent: #2563eb;
+      --accent-warm: #c2410c;
+      --accent-warm-bg: #fbf5ee;
+      --tag-green-bg: #ecfdf5;
+      --tag-green-txt: #059669;
+      --tag-green-border: #a7f3d0;
+      --tag-red-bg: #fff1f2;
+      --tag-red-txt: #e11d48;
+      --tag-red-border: #fecdd3;
+      --spot-card-bg: #faf9f5;
+      --timeline-line: #ebe8de;
+      --card-shadow: 0 4px 18px -2px rgba(45, 43, 40, 0.04), 0 1px 3px rgba(45, 43, 40, 0.02);
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #141312;
+        --card-bg: #1e1c1a;
+        --text-main: #f5f4f0;
+        --text-sub: #a8a49c;
+        --text-muted: #78746c;
+        --border: #2e2b27;
+        --border-inner: #262421;
+        --accent: #60a5fa;
+        --accent-warm: #fb923c;
+        --accent-warm-bg: #271b12;
+        --tag-green-bg: #064e3b;
+        --tag-green-txt: #6ee7b7;
+        --tag-green-border: #047857;
+        --tag-red-bg: #4c0519;
+        --tag-red-txt: #fda4af;
+        --tag-red-border: #881337;
+        --spot-card-bg: #171513;
+        --timeline-line: #2e2b27;
+        --card-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.5);
+      }
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+      background-color: var(--bg);
+      color: var(--text-main);
+      line-height: 1.55;
+      padding: 10px 14px 48px;
+      max-width: 580px;
+      margin: 0 auto;
+      letter-spacing: -0.01em;
+    }
+
+    /* 顶部横滑药丸导航 */
+    .sticky-nav-bar {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: rgba(247, 246, 241, 0.94);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      padding: 8px 0 10px;
+      margin: 0 -14px 10px;
+      padding-left: 14px;
+      overflow-x: auto;
+      white-space: nowrap;
+      display: flex;
+      gap: 8px;
+      scrollbar-width: none;
+    }
+    .sticky-nav-bar::-webkit-scrollbar { display: none; }
+    .nav-pill {
+      display: inline-flex;
+      align-items: center;
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      color: var(--text-sub);
+      font-size: 0.78rem;
+      font-weight: 700;
+      padding: 6px 13px;
+      border-radius: 999px;
+      text-decoration: none;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.02);
+      flex-shrink: 0;
+    }
+    .nav-pill:active {
+      transform: scale(0.96);
+      background: var(--accent-warm-bg);
+      color: var(--accent-warm);
+    }
+
+    .card {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 16px;
+      margin-bottom: 14px;
+      box-shadow: var(--card-shadow);
+    }
+    details.card { padding: 0; overflow: hidden; }
+    summary.section-summary {
+      list-style: none;
+      font-size: 0.98rem;
+      font-weight: 800;
+      padding: 15px 16px;
+      cursor: pointer;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      user-select: none;
+    }
+    summary.section-summary::-webkit-details-marker { display: none; }
+    .arrow-icon {
+      width: 7px;
+      height: 7px;
+      border-right: 2px solid var(--text-muted);
+      border-bottom: 2px solid var(--text-muted);
+      transform: rotate(-45deg);
+      transition: transform 0.25s ease;
+      margin-right: 2px;
+      flex-shrink: 0;
+    }
+    details[open] > summary.section-summary .arrow-icon { transform: rotate(45deg); }
+    .details-body {
+      padding: 0 16px 16px 16px;
+      border-top: 1px solid var(--border-inner);
+      padding-top: 14px;
+    }
+    .section-title {
+      font-size: 1.05rem;
+      font-weight: 800;
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    /* 顶部倒计时 */
+    .focus-card {
+      background: linear-gradient(135deg, rgba(194, 65, 12, 0.05) 0%, rgba(245, 158, 11, 0.03) 100%);
+      border: 1.5px solid rgba(194, 65, 12, 0.2);
+    }
+    .focus-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 0.72rem;
+      font-weight: 800;
+      color: var(--accent-warm);
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      margin-bottom: 6px;
+    }
+    .focus-event { font-size: 1.15rem; font-weight: 800; margin-bottom: 12px; color: var(--text-main); }
+    .timer-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; text-align: center; }
+    .timer-box { background: var(--card-bg); border: 1px solid var(--border); border-radius: 12px; padding: 8px 4px; }
+    .timer-val { font-size: 1.3rem; font-weight: 800; font-variant-numeric: tabular-nums; color: var(--accent-warm); line-height: 1.1; }
+    .timer-lbl { font-size: 0.68rem; color: var(--text-muted); font-weight: 600; margin-top: 2px; }
+
+    /* 拟物登机牌/车票卡片 */
+    .ticket-card {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      padding: 14px 16px;
+      margin-bottom: 10px;
+    }
+    .ticket-card:last-child { margin-bottom: 0; }
+    .ticket-header { display: flex; justify-content: space-between; align-items: center; font-size: 0.78rem; color: var(--text-sub); font-weight: 600; margin-bottom: 8px; }
+    .ticket-pill { font-size: 0.7rem; font-weight: 700; padding: 2px 8px; border-radius: 6px; line-height: 1.2; }
+    .ticket-pill.confirmed { background: var(--tag-green-bg); color: var(--tag-green-txt); border: 1px solid var(--tag-green-border); }
+    .ticket-pill.pending { background: var(--tag-red-bg); color: var(--tag-red-txt); border: 1px solid var(--tag-red-border); }
+    .ticket-route { display: flex; align-items: center; justify-content: space-between; margin: 10px 0 8px; }
+    .station-col { flex: 1; }
+    .station-col.right { text-align: right; }
+    .station-name { font-size: 1.25rem; font-weight: 900; letter-spacing: -0.01em; line-height: 1.2; }
+    .station-meta { font-size: 0.88rem; font-weight: 700; color: var(--text-sub); margin-top: 4px; font-variant-numeric: tabular-nums; }
+    .route-transit-info { display: flex; flex-direction: column; align-items: center; padding: 0 8px; position: relative; }
+    .transit-duration { font-size: 0.72rem; font-weight: 600; color: var(--text-muted); margin-bottom: 2px; }
+    .transit-line-bar { width: 80px; height: 1px; background: var(--border); position: relative; }
+    .transit-line-bar-icon { position: absolute; top: -8px; left: 32px; font-size: 11px; line-height: 1; }
+    .ticket-footer { border-top: 1px dashed var(--border); padding-top: 8px; margin-top: 8px; font-size: 0.75rem; color: var(--text-muted); display: flex; justify-content: space-between; align-items: center; }
+    .ticket-action { color: var(--accent); font-weight: 600; text-decoration: none; cursor: pointer; }
+
+    /* 每日行程印章与时间轴 */
+    .day-header-box { display: flex; align-items: center; gap: 12px; }
+    .date-stamp {
+      color: #fff;
+      border-radius: 12px;
+      width: 44px;
+      height: 44px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      line-height: 1.1;
+      box-shadow: 0 3px 8px rgba(0, 0, 0, 0.12);
+    }
+    .date-stamp-d { font-size: 0.98rem; font-weight: 900; }
+    .date-stamp-w { font-size: 0.65rem; font-weight: 600; opacity: 0.92; }
+    .day-header-info { flex: 1; min-width: 0; }
+    .day-header-title { font-size: 1rem; font-weight: 800; line-height: 1.25; color: var(--text-main); }
+    .day-header-sub { font-size: 0.74rem; color: var(--text-sub); margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    
+    .timeline { display: flex; flex-direction: column; position: relative; padding-left: 2px; }
+    .timeline::before { content: ""; position: absolute; left: 48px; top: 10px; bottom: 10px; width: 2px; background: var(--timeline-line); border-radius: 1px; }
+    .timeline-row { display: flex; align-items: flex-start; gap: 14px; padding-bottom: 16px; position: relative; }
+    .timeline-row:last-child { padding-bottom: 0; }
+    .timeline-time { font-weight: 800; font-variant-numeric: tabular-nums; width: 40px; flex-shrink: 0; font-size: 0.84rem; color: var(--text-sub); padding-top: 1px; text-align: right; }
+    .timeline-node { position: absolute; left: 45px; top: 6px; width: 8px; height: 8px; border-radius: 50%; background: var(--card-bg); border: 2px solid var(--accent-warm); z-index: 2; }
+    .timeline-content { flex: 1; padding-left: 6px; }
+    .timeline-spot-title { display: flex; align-items: center; flex-wrap: wrap; gap: 6px; margin-bottom: 2px; }
+    .place-link { color: var(--text-main); font-weight: 800; font-size: 0.94rem; cursor: pointer; border-bottom: 1.5px solid var(--accent); padding-bottom: 1px; text-decoration: none; }
+    .place-link:active { opacity: 0.7; }
+    .transit-badge { display: inline-flex; align-items: center; font-size: 0.72rem; padding: 1px 7px; border-radius: 6px; background: var(--spot-card-bg); border: 1px solid var(--border); color: var(--text-sub); font-weight: 500; }
+    
+    .info-btn { display: inline-flex; align-items: center; justify-content: center; width: 17px; height: 17px; border-radius: 50%; background: rgba(194, 65, 12, 0.08); color: var(--accent-warm); border: 1px solid rgba(194, 65, 12, 0.3); font-size: 0.68rem; font-weight: 800; cursor: pointer; user-select: none; line-height: 1; }
+    .info-btn.active { background: var(--accent-warm); color: #fff; }
+    .spot-accordion-card { display: none; margin-top: 8px; padding: 10px 12px; background: var(--spot-card-bg); border-left: 3px solid var(--accent-warm); border-radius: 4px 10px 10px 4px; border-top: 1px solid var(--border); border-right: 1px solid var(--border); border-bottom: 1px solid var(--border); font-size: 0.81rem; line-height: 1.6; color: var(--text-main); }
+    .spot-accordion-card.open { display: block; animation: fadeIn 0.2s ease-out; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(-3px); } to { opacity: 1; transform: translateY(0); } }
+
+    .tag { display: inline-block; font-size: 0.68rem; font-weight: 600; padding: 1px 6px; border-radius: 6px; vertical-align: middle; }
+    .tag-warn { background: var(--tag-red-bg); color: var(--tag-red-txt); border: 1px solid var(--tag-red-border); }
+
+    /* 待办清单 */
+    .todo-list { list-style: none; display: flex; flex-direction: column; gap: 10px; }
+    .todo-item { display: flex; align-items: flex-start; gap: 10px; padding: 6px 4px; border-radius: 8px; cursor: pointer; user-select: none; }
+    .todo-checkbox { appearance: none; -webkit-appearance: none; width: 18px; height: 18px; border: 1.8px solid var(--border); border-radius: 5px; outline: none; background-color: var(--card-bg); cursor: pointer; flex-shrink: 0; margin-top: 3px; display: flex; align-items: center; justify-content: center; }
+    .todo-checkbox:checked { background-color: var(--accent-warm); border-color: var(--accent-warm); }
+    .todo-checkbox:checked::after { content: ""; width: 4px; height: 8px; border: solid white; border-width: 0 2px 2px 0; transform: rotate(45deg) translate(-1px, -1px); }
+    .todo-text { font-size: 0.85rem; color: var(--text-main); line-height: 1.5; flex: 1; }
+    .todo-item.completed .todo-text { color: var(--text-muted); text-decoration: line-through; }
+    .todo-item.completed .todo-text strong { color: var(--text-muted); font-weight: 500; }
+
+    .booking-grid { display: flex; flex-direction: column; gap: 10px; }
+    .booking-row { border: 1px solid var(--border); border-radius: 12px; padding: 12px; background: var(--spot-card-bg); }
+    .booking-target-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; flex-wrap: wrap; gap: 4px; }
+    .booking-target-name { font-weight: 700; font-size: 0.92rem; }
+    .booking-op-time { font-weight: 800; font-size: 0.8rem; color: var(--accent-warm); background: var(--accent-warm-bg); padding: 2px 8px; border-radius: 6px; }
+    .booking-rule { font-size: 0.8rem; color: var(--text-sub); line-height: 1.45; margin-bottom: 6px; }
+    .booking-channel { font-size: 0.75rem; color: var(--text-muted); }
+
+    .static-list { list-style: none; font-size: 0.84rem; }
+    .static-list li { position: relative; padding-left: 18px; margin-bottom: 9px; color: var(--text-sub); line-height: 1.5; }
+    .static-list li:last-child { margin-bottom: 0; }
+    .static-list li::before { content: ""; position: absolute; left: 5px; top: 8px; width: 5px; height: 5px; border-radius: 50%; background: var(--accent-warm); }
+    .static-list li strong { color: var(--text-main); font-weight: 700; }
+
+    .callout-box { background: var(--accent-warm-bg); border: 1px solid rgba(194, 65, 12, 0.2); border-radius: 12px; padding: 10px 12px; font-size: 0.78rem; color: var(--accent-warm); line-height: 1.45; margin-top: 10px; }
+    footer { text-align: center; font-size: 0.74rem; color: var(--text-muted); padding: 24px 0 12px; font-weight: 500; }
+  </style>
+</head>
+<body>
+
+  <nav class="sticky-nav-bar" id="nav-container"></nav>
+
+  <header>
+    <h1 id="header-title">旅行手册</h1>
+    <p id="header-subtitle"></p>
+  </header>
+
+  <!-- 倒计时模块 -->
+  <section class="card focus-card" id="sec-focus">
+    <div class="focus-badge">Next Target · 此刻关注</div>
+    <div class="focus-event" id="target-title">行程监测中...</div>
+    <div class="timer-grid">
+      <div class="timer-box"><div class="timer-val" id="t-d">00</div><div class="timer-lbl">天</div></div>
+      <div class="timer-box"><div class="timer-val" id="t-h">00</div><div class="timer-lbl">时</div></div>
+      <div class="timer-box"><div class="timer-val" id="t-m">00</div><div class="timer-lbl">分</div></div>
+      <div class="timer-box"><div class="timer-val" id="t-s">00</div><div class="timer-lbl">秒</div></div>
+    </div>
+  </section>
+
+  <!-- 交通与住宿 -->
+  <section class="card" id="sec-transport">
+    <div class="section-title">🚄 交通与住宿 (行程票夹)</div>
+    <div id="tickets-container"></div>
+    <div class="callout-box" id="ticket-note"></div>
+  </section>
+
+  <!-- 抢票时刻表 -->
+  <details class="card" id="sec-booking">
+    <summary class="section-summary">
+      <span>📅 抢票与预约时刻表</span>
+      <span class="arrow-icon"></span>
+    </summary>
+    <div class="details-body">
+      <div class="booking-grid" id="bookings-container"></div>
+    </div>
+  </details>
+
+  <!-- 每日行程列表 -->
+  <div id="days-container"></div>
+
+  <!-- 待办清单 -->
+  <details class="card" id="sec-todo" open>
+    <summary class="section-summary">
+      <span>✅ 行前待办事项 (点击勾选)</span>
+      <span class="arrow-icon"></span>
+    </summary>
+    <div class="details-body">
+      <ul class="todo-list" id="todos-container"></ul>
+    </div>
+  </details>
+
+  <!-- 实用贴士 -->
+  <details class="card" id="sec-tips">
+    <summary class="section-summary">
+      <span>💡 实用出行贴士</span>
+      <span class="arrow-icon"></span>
+    </summary>
+    <div class="details-body">
+      <ul class="static-list" id="tips-container"></ul>
+    </div>
+  </details>
+
+  <footer id="footer-text">旅行手册 · 实时数据引擎驱动</footer>
+
+  <!-- 引用外部业务数据文件（实现数据与页面分离） -->
+  <script src="./trip-data.js"></script>
+
+  <script>
+    function renderApp() {
+      if (typeof TRIP_DATA === 'undefined') {
+        alert("未检测到 trip-data.js 文件，请确保同级目录下存在该文件！");
+        return;
+      }
+
+      // 1. 标题
+      document.title = TRIP_DATA.meta.title;
+      document.getElementById('header-title').textContent = TRIP_DATA.meta.title;
+      document.getElementById('header-subtitle').textContent = TRIP_DATA.meta.subtitle;
+      document.getElementById('ticket-note').textContent = TRIP_DATA.meta.ticketNote || "⚠️ 购票提示：请提前录入乘车人信息并关注放票时间。";
+
+      // 2. 药丸导航
+      const navEl = document.getElementById('nav-container');
+      let navHtml = `
+        <a class="nav-pill" href="#sec-transport">🚄 车票住宿</a>
+        <a class="nav-pill" href="#sec-booking">📅 抢票日程</a>
+      `;
+      TRIP_DATA.days.forEach(d => {
+        navHtml += `<a class="nav-pill" href="#day-card-${d.dayIndex}">📌 ${d.dateText}行程</a>`;
+      });
+      navHtml += `<a class="nav-pill" href="#sec-todo">✅ 待办事项</a>`;
+      navEl.innerHTML = navHtml;
+
+      // 3. 拟物车票
+      const ticketsEl = document.getElementById('tickets-container');
+      let ticketsHtml = '';
+      TRIP_DATA.tickets.forEach(item => {
+        if (item.type === 'transport') {
+          ticketsHtml += `
+            <div class="ticket-card">
+              <div class="ticket-header">
+                <span>${item.badge}</span>
+                <span class="ticket-pill ${item.statusType}">${item.status}</span>
+              </div>
+              <div class="ticket-route">
+                <div class="station-col">
+                  <div class="station-name">${item.fromName}</div>
+                  <div class="station-meta">${item.fromTime}</div>
+                </div>
+                <div class="route-transit-info">
+                  <div class="transit-duration">${item.transitDuration}</div>
+                  <div class="transit-line-bar">
+                    <span class="transit-line-bar-icon">${item.icon || '🚄'}</span>
+                  </div>
+                </div>
+                <div class="station-col right">
+                  <div class="station-name">${item.toName}</div>
+                  <div class="station-meta">${item.toTime}</div>
+                </div>
+              </div>
+              <div class="ticket-footer">
+                <span>${item.footerText}</span>
+                <a class="ticket-action" href="${item.actionLink || 'javascript:;'}">${item.actionText}</a>
+              </div>
+            </div>
+          `;
+        } else if (item.type === 'hotel') {
+          ticketsHtml += `
+            <div class="ticket-card">
+              <div class="ticket-header">
+                <span>${item.badge}</span>
+                <span class="ticket-pill ${item.statusType}">${item.status}</span>
+              </div>
+              <div style="font-weight:800;font-size:1.05rem;margin:6px 0 2px;">${item.hotelName}</div>
+              <div style="font-size:0.8rem;color:var(--text-sub);">${item.address}</div>
+              <div class="ticket-footer">
+                <span>${item.footerText}</span>
+                <a class="ticket-action" onclick="navTo(${item.geo.lng}, ${item.geo.lat}, '${item.geo.name}')">${item.actionText}</a>
+              </div>
+            </div>
+          `;
+        }
+      });
+      ticketsEl.innerHTML = ticketsHtml;
+
+      // 4. 抢票时刻
+      const bookingsEl = document.getElementById('bookings-container');
+      let bookingsHtml = '';
+      TRIP_DATA.bookings.forEach(b => {
+        bookingsHtml += `
+          <div class="booking-row">
+            <div class="booking-target-header">
+              <span class="booking-target-name">${b.target}</span>
+              <span class="booking-op-time">${b.time}</span>
+            </div>
+            <div class="booking-rule">${b.rule}</div>
+            <div class="booking-channel"><strong>入口：</strong>${b.channel}</div>
+          </div>
+        `;
+      });
+      bookingsEl.innerHTML = bookingsHtml;
+
+      // 5. 每日行程渲染
+      const daysEl = document.getElementById('days-container');
+      let daysHtml = '';
+      TRIP_DATA.days.forEach(d => {
+        let timelineRows = '';
+        d.timeline.forEach((row, rIdx) => {
+          const spotKey = `spot-${d.dayIndex}-${rIdx}`;
+          const titleHtml = row.geo
+            ? `<span class="place-link" onclick="navTo(${row.geo.lng}, ${row.geo.lat}, '${row.geo.name}')">${row.title}</span>`
+            : `<span style="font-weight:700;font-size:0.92rem;">${row.title}</span>`;
+          
+          const tagHtml = row.tag ? `<span class="tag tag-warn">${row.tag}</span>` : '';
+          const infoBtnHtml = row.isSpot
+            ? `<span class="info-btn" onclick="toggleSpotCard('${spotKey}', this)" title="展开介绍">ⓘ</span>`
+            : '';
+          const accordionHtml = row.isSpot
+            ? `<div class="spot-accordion-card" id="card-${spotKey}">${row.summary || ''}</div>`
+            : '';
+
+          timelineRows += `
+            <div class="timeline-row">
+              <div class="timeline-time">${row.time}</div>
+              <div class="timeline-node"></div>
+              <div class="timeline-content">
+                <div class="timeline-spot-title">
+                  ${titleHtml}
+                  ${tagHtml}
+                  ${infoBtnHtml}
+                  <span class="transit-badge">${row.badge}</span>
+                </div>
+                ${accordionHtml}
+              </div>
+            </div>
+          `;
+        });
+
+        daysHtml += `
+          <details class="card day-accordion-item" id="day-card-${d.dayIndex}" data-start="${d.startDate}" data-end="${d.endDate}">
+            <summary class="section-summary">
+              <div class="day-header-box">
+                <div class="date-stamp" style="background:${d.stampColor || '#e11d48'};">
+                  <div class="date-stamp-d">${d.dateText}</div>
+                  <div class="date-stamp-w">${d.weekText}</div>
+                </div>
+                <div class="day-header-info">
+                  <div class="day-header-title">${d.themeTitle}</div>
+                  <div class="day-header-sub">${d.routeSummary}</div>
+                </div>
+              </div>
+              <span class="arrow-icon"></span>
+            </summary>
+            <div class="details-body">
+              <div class="timeline">${timelineRows}</div>
+            </div>
+          </details>
+        `;
+      });
+      daysEl.innerHTML = daysHtml;
+
+      // 6. 待办清单
+      const todosEl = document.getElementById('todos-container');
+      let todosHtml = '';
+      TRIP_DATA.todos.forEach(t => {
+        todosHtml += `
+          <li class="todo-item" onclick="toggleTodoItem(this)">
+            <input type="checkbox" class="todo-checkbox" data-todo-id="${t.id}" onclick="event.stopPropagation(); updateTodoState(this.parentElement, this.checked);">
+            <div class="todo-text">${t.text}</div>
+          </li>
+        `;
+      });
+      todosEl.innerHTML = todosHtml;
+
+      // 7. 贴士
+      const tipsEl = document.getElementById('tips-container');
+      let tipsHtml = '';
+      TRIP_DATA.tips.forEach(tp => {
+        tipsHtml += `<li>${tp}</li>`;
+      });
+      tipsEl.innerHTML = tipsHtml;
+
+      loadTodoStates();
+      syncDayAccordionByTime();
+      initCountdown();
+    }
+
+    function toggleSpotCard(key, btn) {
+      const card = document.getElementById('card-' + key);
+      if (!card) return;
+      const isOpen = card.classList.contains('open');
+      if (isOpen) {
+        card.classList.remove('open');
+        btn.classList.remove('active');
+      } else {
+        card.classList.add('open');
+        btn.classList.add('active');
+      }
+    }
+
+    function navTo(lng, lat, name) {
+      const u = navigator.userAgent;
+      const isIOS = !!u.match(/\(i[^;]+;( U;)? CPU.+Mac OS X/);
+      const isAndroid = u.indexOf('Android') > -1 || u.indexOf('Adr') > -1;
+      const encodedName = encodeURIComponent(name);
+
+      let appUri = '';
+      if (isIOS) {
+        appUri = `iosamap://viewMap?sourceApplication=TripManual&poiname=${encodedName}&lat=${lat}&lon=${lng}&dev=0`;
+      } else if (isAndroid) {
+        appUri = `androidamap://viewMap?sourceApplication=TripManual&poiname=${encodedName}&lat=${lat}&lon=${lng}&dev=0`;
+      } else {
+        appUri = `https://uri.amap.com/marker?position=${lng},${lat}&name=${encodedName}&coordinate=gaode&callnative=1`;
+      }
+
+      const webFallback = `https://uri.amap.com/marker?position=${lng},${lat}&name=${encodedName}&coordinate=gaode&callnative=1`;
+
+      if (isIOS || isAndroid) {
+        window.location.href = appUri;
+        const openTime = Date.now();
+        setTimeout(() => {
+          if (Date.now() - openTime < 2200) {
+            window.location.href = webFallback;
+          }
+        }, 1500);
+      } else {
+        window.open(webFallback, '_blank');
+      }
+    }
+
+    function toggleTodoItem(itemEl) {
+      const cb = itemEl.querySelector('.todo-checkbox');
+      cb.checked = !cb.checked;
+      updateTodoState(itemEl, cb.checked);
+    }
+    function updateTodoState(itemEl, isChecked) {
+      const cb = itemEl.querySelector('.todo-checkbox');
+      const id = cb.getAttribute('data-todo-id');
+      if (isChecked) {
+        itemEl.classList.add('completed');
+        try { localStorage.setItem('trip_manual_' + id, '1'); } catch(e){}
+      } else {
+        itemEl.classList.remove('completed');
+        try { localStorage.removeItem('trip_manual_' + id); } catch(e){}
+      }
+    }
+    function loadTodoStates() {
+      const checkboxes = document.querySelectorAll('.todo-checkbox');
+      checkboxes.forEach(cb => {
+        const id = cb.getAttribute('data-todo-id');
+        try {
+          if (localStorage.getItem('trip_manual_' + id) === '1') {
+            cb.checked = true;
+            cb.parentElement.classList.add('completed');
+          }
+        } catch(e){}
+      });
+    }
+
+    function syncDayAccordionByTime() {
+      const now = new Date();
+      const dayCards = document.querySelectorAll('.day-accordion-item');
+      let activeFound = false;
+
+      dayCards.forEach((card, idx) => {
+        const start = new Date(card.getAttribute('data-start'));
+        const end = new Date(card.getAttribute('data-end'));
+
+        if (!activeFound && now >= start && now <= end) {
+          card.open = true;
+          activeFound = true;
+        } else if (!activeFound && idx === 0 && now < start) {
+          card.open = true;
+          activeFound = true;
+        } else {
+          card.open = false;
+        }
+      });
+
+      if (!activeFound && dayCards.length > 0) {
+        dayCards[dayCards.length - 1].open = true;
+      }
+    }
+
+    function initCountdown() {
+      const milestones = TRIP_DATA.milestones.map(m => ({ name: m.name, time: new Date(m.time) }));
+      function update() {
+        const now = new Date();
+        let target = null;
+        for (let item of milestones) {
+          if (item.time > now) { target = item; break; }
+        }
+
+        const titleEl = document.getElementById("target-title");
+        const dEl = document.getElementById("t-d");
+        const hEl = document.getElementById("t-h");
+        const mEl = document.getElementById("t-m");
+        const sEl = document.getElementById("t-s");
+
+        if (!target) {
+          titleEl.textContent = "行程已圆满结束";
+          dEl.textContent = "00"; hEl.textContent = "00"; mEl.textContent = "00"; sEl.textContent = "00";
+          return;
+        }
+
+        titleEl.textContent = target.name;
+        const diff = Math.max(0, target.time - now);
+        const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+        const hours = Math.floor((diff / (1000 * 60 * 60)) % 24);
+        const minutes = Math.floor((diff / (1000 * 60)) % 60);
+        const seconds = Math.floor((diff / 1000) % 60);
+
+        dEl.textContent = String(days).padStart(2, "0");
+        hEl.textContent = String(hours).padStart(2, "0");
+        mEl.textContent = String(minutes).padStart(2, "0");
+        sEl.textContent = String(seconds).padStart(2, "0");
+      }
+      setInterval(update, 1000);
+      update();
+    }
+
+    window.addEventListener('DOMContentLoaded', renderApp);
+  </script>
+</body>
+</html>
