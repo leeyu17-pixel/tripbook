@@ -381,19 +381,6 @@
   <script src="./trip-data.js"></script>
 
   <script>
-    // ========================================================
-    // 📅 原生手机日历 (.ics) 提醒生成工具
-    // ========================================================
-    function formatDateToICS(d) {
-      const pad = n => String(n).padStart(2, '0');
-      return d.getUTCFullYear() +
-             pad(d.getUTCMonth() + 1) +
-             pad(d.getUTCDate()) + 'T' +
-             pad(d.getUTCHours()) +
-             pad(d.getUTCMinutes()) +
-             pad(d.getUTCSeconds()) + 'Z';
-    }
-
 // ========================================================
 // 📅 小米/安卓手机深度兼容：原生日历 (.ics) 生成工具
 // ========================================================
