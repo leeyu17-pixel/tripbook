@@ -244,6 +244,48 @@
     .food-type { font-size: 0.72rem; font-weight: 700; color: var(--accent-warm); background: var(--accent-warm-bg); padding: 2px 7px; border-radius: 6px; }
     .food-desc { font-size: 0.81rem; color: var(--text-sub); line-height: 1.5; }
 
+    /* 抢票时刻与日历提醒按钮 */
+    .booking-grid { display: flex; flex-direction: column; gap: 10px; }
+    .booking-row { border: 1px solid var(--border); border-radius: 12px; padding: 12px; background: var(--spot-card-bg); }
+    .booking-target-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; flex-wrap: wrap; gap: 4px; }
+    .booking-target-name { font-weight: 700; font-size: 0.92rem; }
+    
+    .booking-action-group {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .booking-op-time {
+      font-weight: 800;
+      font-size: 0.78rem;
+      color: var(--accent-warm);
+      background: var(--accent-warm-bg);
+      padding: 2px 8px;
+      border-radius: 6px;
+    }
+    .add-cal-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 2px;
+      background: var(--card-bg);
+      border: 1px solid var(--accent-warm);
+      color: var(--accent-warm);
+      font-size: 0.7rem;
+      font-weight: 700;
+      padding: 2px 7px;
+      border-radius: 6px;
+      cursor: pointer;
+      text-decoration: none;
+      transition: all 0.15s ease;
+    }
+    .add-cal-btn:active {
+      background: var(--accent-warm);
+      color: #fff;
+      transform: scale(0.95);
+    }
+    .booking-rule { font-size: 0.8rem; color: var(--text-sub); line-height: 1.45; margin-bottom: 6px; }
+    .booking-channel { font-size: 0.75rem; color: var(--text-muted); }
+
     /* 待办清单 */
     .todo-list { list-style: none; display: flex; flex-direction: column; gap: 10px; }
     .todo-item { display: flex; align-items: flex-start; gap: 10px; padding: 6px 4px; border-radius: 8px; cursor: pointer; user-select: none; }
@@ -253,14 +295,6 @@
     .todo-text { font-size: 0.85rem; color: var(--text-main); line-height: 1.5; flex: 1; }
     .todo-item.completed .todo-text { color: var(--text-muted); text-decoration: line-through; }
     .todo-item.completed .todo-text strong { color: var(--text-muted); font-weight: 500; }
-
-    .booking-grid { display: flex; flex-direction: column; gap: 10px; }
-    .booking-row { border: 1px solid var(--border); border-radius: 12px; padding: 12px; background: var(--spot-card-bg); }
-    .booking-target-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; flex-wrap: wrap; gap: 4px; }
-    .booking-target-name { font-weight: 700; font-size: 0.92rem; }
-    .booking-op-time { font-weight: 800; font-size: 0.8rem; color: var(--accent-warm); background: var(--accent-warm-bg); padding: 2px 8px; border-radius: 6px; }
-    .booking-rule { font-size: 0.8rem; color: var(--text-sub); line-height: 1.45; margin-bottom: 6px; }
-    .booking-channel { font-size: 0.75rem; color: var(--text-muted); }
 
     .static-list { list-style: none; font-size: 0.84rem; }
     .static-list li { position: relative; padding-left: 18px; margin-bottom: 9px; color: var(--text-sub); line-height: 1.5; }
@@ -281,8 +315,9 @@
     <p id="header-subtitle"></p>
   </header>
 
+  <!-- 倒计时模块 (已优化为优先倒计时临近预约抢票) -->
   <section class="card focus-card" id="sec-focus">
-    <div class="focus-badge">Next Target · 此刻关注</div>
+    <div class="focus-badge" id="focus-badge-text">Next Target · 此刻关注</div>
     <div class="focus-event" id="target-title">行程监测中...</div>
     <div class="timer-grid">
       <div class="timer-box"><div class="timer-val" id="t-d">00</div><div class="timer-lbl">天</div></div>
@@ -298,9 +333,10 @@
     <div class="callout-box" id="ticket-note"></div>
   </section>
 
-  <details class="card" id="sec-booking">
+  <!-- 抢票时刻表 (新增手机日历一键导入) -->
+  <details class="card" id="sec-booking" open>
     <summary class="section-summary">
-      <span>📅 抢票与预约时刻表</span>
+      <span>📅 抢票与预约时刻表 (支持导入日历)</span>
       <span class="arrow-icon"></span>
     </summary>
     <div class="details-body">
@@ -345,6 +381,83 @@
   <script src="./trip-data.js"></script>
 
   <script>
+    // ========================================================
+    // 📅 原生手机日历 (.ics) 提醒生成工具
+    // ========================================================
+    function formatDateToICS(d) {
+      const pad = n => String(n).padStart(2, '0');
+      return d.getUTCFullYear() +
+             pad(d.getUTCMonth() + 1) +
+             pad(d.getUTCDate()) + 'T' +
+             pad(d.getUTCHours()) +
+             pad(d.getUTCMinutes()) +
+             pad(d.getUTCSeconds()) + 'Z';
+    }
+
+    function createCalendarEvent(title, timeStr, rule, channel) {
+      // 解析时间字符串（如 "09.27 17:15" 或标准 ISO 字符串）
+      let eventDate = null;
+      if (timeStr.includes('T')) {
+        eventDate = new Date(timeStr);
+      } else {
+        const match = timeStr.match(/(\d{1,2})[\.\/-](\d{1,2})\s+(\d{1,2}):(\d{1,2})/);
+        if (match) {
+          const year = 2026;
+          const month = parseInt(match[1]) - 1;
+          const day = parseInt(match[2]);
+          const hour = parseInt(match[3]);
+          const min = parseInt(match[4]);
+          eventDate = new Date(year, month, day, hour, min, 0);
+        }
+      }
+
+      if (!eventDate || isNaN(eventDate.getTime())) {
+        alert("该事项无需抢票或已完成出票！");
+        return;
+      }
+
+      const startDateStr = formatDateToICS(eventDate);
+      const endDate = new Date(eventDate.getTime() + 30 * 60 * 1000); // 持续30分钟
+      const endDateStr = formatDateToICS(endDate);
+      const nowStr = formatDateToICS(new Date());
+
+      const icsData = 
+`BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//TravelManual//CN
+CALSCALE:GREGORIAN
+METHOD:PUBLISH
+BEGIN:VEVENT
+UID:trip-${Date.now()}@travelmanual
+DTSTAMP:${nowStr}
+DTSTART:${startDateStr}
+DTEND:${endDateStr}
+SUMMARY:【抢票提醒】${title}
+DESCRIPTION:${rule}\\n入口：${channel}
+BEGIN:VALARM
+ACTION:DISPLAY
+DESCRIPTION:抢票闹钟
+TRIGGER:-PT10M
+END:VALARM
+END:VEVENT
+END:VCALENDAR`;
+
+      const blob = new Blob([icsData], { type: 'text/calendar;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+
+      // iOS Safari 或 Android 浏览器触发日历下载与唤醒
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `提醒_${title.replace(/[\s\(\)->]/g, '_')}.ics`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      setTimeout(() => URL.revokeObjectURL(url), 2000);
+    }
+
+    // ========================================================
+    // 🚀 主渲染逻辑
+    // ========================================================
     function renderApp() {
       if (typeof TRIP_DATA === 'undefined') {
         alert("未检测到 trip-data.js 文件，请确保同级目录下存在该文件！");
@@ -356,6 +469,7 @@
       document.getElementById('header-subtitle').textContent = TRIP_DATA.meta.subtitle;
       document.getElementById('ticket-note').textContent = TRIP_DATA.meta.ticketNote || "⚠️ 购票提示：请提前录入乘车人信息并关注放票时间。";
 
+      // 药丸导航
       const navEl = document.getElementById('nav-container');
       let navHtml = `
         <a class="nav-pill" href="#sec-transport">🚄 车票住宿</a>
@@ -370,6 +484,7 @@
       `;
       navEl.innerHTML = navHtml;
 
+      // 车票卡片
       const ticketsEl = document.getElementById('tickets-container');
       let ticketsHtml = '';
       TRIP_DATA.tickets.forEach(item => {
@@ -421,14 +536,23 @@
       });
       ticketsEl.innerHTML = ticketsHtml;
 
+      // 抢票时刻表 (新增 📅 加提醒 交互)
       const bookingsEl = document.getElementById('bookings-container');
       let bookingsHtml = '';
-      TRIP_DATA.bookings.forEach(b => {
+      TRIP_DATA.bookings.forEach((b, idx) => {
+        const canSetReminder = !b.time.includes('已') && !b.time.includes('无需');
+        const calBtnHtml = canSetReminder
+          ? `<button class="add-cal-btn" onclick="createCalendarEvent('${b.target}', '${b.time}', '${b.rule}', '${b.channel}')">📅 加提醒</button>`
+          : '';
+
         bookingsHtml += `
           <div class="booking-row">
             <div class="booking-target-header">
               <span class="booking-target-name">${b.target}</span>
-              <span class="booking-op-time">${b.time}</span>
+              <div class="booking-action-group">
+                <span class="booking-op-time">${b.time}</span>
+                ${calBtnHtml}
+              </div>
             </div>
             <div class="booking-rule">${b.rule}</div>
             <div class="booking-channel"><strong>入口：</strong>${b.channel}</div>
@@ -437,6 +561,7 @@
       });
       bookingsEl.innerHTML = bookingsHtml;
 
+      // 每日行程
       const daysEl = document.getElementById('days-container');
       let daysHtml = '';
       TRIP_DATA.days.forEach(d => {
@@ -495,6 +620,7 @@
       });
       daysEl.innerHTML = daysHtml;
 
+      // 美食卡片
       const foodsEl = document.getElementById('foods-container');
       if (TRIP_DATA.foods && TRIP_DATA.foods.length > 0) {
         let foodsHtml = '';
@@ -512,6 +638,7 @@
         foodsEl.innerHTML = foodsHtml;
       }
 
+      // 待办清单
       const todosEl = document.getElementById('todos-container');
       let todosHtml = '';
       TRIP_DATA.todos.forEach(t => {
@@ -524,6 +651,7 @@
       });
       todosEl.innerHTML = todosHtml;
 
+      // 贴士
       const tipsEl = document.getElementById('tips-container');
       let tipsHtml = '';
       TRIP_DATA.tips.forEach(tp => {
@@ -633,15 +761,54 @@
       }
     }
 
+    // ========================================================
+    // ⏱️ 「此刻关注」抢票优先加权计算引擎
+    // ========================================================
     function initCountdown() {
-      const milestones = TRIP_DATA.milestones.map(m => ({ name: m.name, time: new Date(m.time) }));
+      // 1. 搜集抢票时刻并转为时间节点
+      const bookingTargets = [];
+      TRIP_DATA.bookings.forEach(b => {
+        const match = b.time.match(/(\d{1,2})[\.\/-](\d{1,2})\s+(\d{1,2}):(\d{1,2})/);
+        if (match) {
+          const year = 2026;
+          const month = parseInt(match[1]) - 1;
+          const day = parseInt(match[2]);
+          const hour = parseInt(match[3]);
+          const min = parseInt(match[4]);
+          bookingTargets.push({
+            name: `【卡点抢票】${b.target}`,
+            time: new Date(year, month, day, hour, min, 0),
+            isBooking: true
+          });
+        }
+      });
+
+      // 2. 常规行程节点
+      const regularMilestones = TRIP_DATA.milestones.map(m => ({
+        name: m.name,
+        time: new Date(m.time),
+        isBooking: false
+      }));
+
       function update() {
         const now = new Date();
         let target = null;
-        for (let item of milestones) {
-          if (item.time > now) { target = item; break; }
+
+        // 【规则加权】：出行前，优先检测是否有未过期的“抢票/预约”任务
+        const upcomingBookings = bookingTargets.filter(b => b.time > now).sort((a, b) => a.time - b.time);
+        
+        if (upcomingBookings.length > 0) {
+          // 若有临近抢票，抢票优先级最高！
+          target = upcomingBookings[0];
+        } else {
+          // 所有抢票完成后，自然回切至下一个行程节点
+          const upcomingRegular = regularMilestones.filter(m => m.time > now).sort((a, b) => a.time - b.time);
+          if (upcomingRegular.length > 0) {
+            target = upcomingRegular[0];
+          }
         }
 
+        const badgeEl = document.getElementById("focus-badge-text");
         const titleEl = document.getElementById("target-title");
         const dEl = document.getElementById("t-d");
         const hEl = document.getElementById("t-h");
@@ -649,12 +816,15 @@
         const sEl = document.getElementById("t-s");
 
         if (!target) {
+          badgeEl.textContent = "Trip Completed · 行程圆满";
           titleEl.textContent = "行程已圆满结束";
           dEl.textContent = "00"; hEl.textContent = "00"; mEl.textContent = "00"; sEl.textContent = "00";
           return;
         }
 
+        badgeEl.textContent = target.isBooking ? "Urgent Ticket · 抢票倒计时" : "Next Target · 此刻关注";
         titleEl.textContent = target.name;
+        
         const diff = Math.max(0, target.time - now);
         const days = Math.floor(diff / (1000 * 60 * 60 * 24));
         const hours = Math.floor((diff / (1000 * 60 * 60)) % 24);
@@ -666,6 +836,7 @@
         mEl.textContent = String(minutes).padStart(2, "0");
         sEl.textContent = String(seconds).padStart(2, "0");
       }
+      
       setInterval(update, 1000);
       update();
     }
