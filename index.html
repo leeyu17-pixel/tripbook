@@ -394,22 +394,81 @@
              pad(d.getUTCSeconds()) + 'Z';
     }
 
-    function createCalendarEvent(title, timeStr, rule, channel) {
-      // 解析时间字符串（如 "09.27 17:15" 或标准 ISO 字符串）
-      let eventDate = null;
-      if (timeStr.includes('T')) {
-        eventDate = new Date(timeStr);
-      } else {
-        const match = timeStr.match(/(\d{1,2})[\.\/-](\d{1,2})\s+(\d{1,2}):(\d{1,2})/);
-        if (match) {
-          const year = 2026;
-          const month = parseInt(match[1]) - 1;
-          const day = parseInt(match[2]);
-          const hour = parseInt(match[3]);
-          const min = parseInt(match[4]);
-          eventDate = new Date(year, month, day, hour, min, 0);
-        }
-      }
+// ========================================================
+// 📅 小米/安卓手机深度兼容：原生日历 (.ics) 生成工具
+// ========================================================
+function createCalendarEvent(title, timeStr, rule, channel) {
+  let eventDate = null;
+  if (timeStr.includes('T')) {
+    eventDate = new Date(timeStr);
+  } else {
+    const match = timeStr.match(/(\d{1,2})[\.\/-](\d{1,2})\s+(\d{1,2}):(\d{1,2})/);
+    if (match) {
+      const year = 2026;
+      const month = parseInt(match[1]) - 1;
+      const day = parseInt(match[2]);
+      const hour = parseInt(match[3]);
+      const min = parseInt(match[4]);
+      eventDate = new Date(year, month, day, hour, min, 0);
+    }
+  }
+
+  if (!eventDate || isNaN(eventDate.getTime())) {
+    alert("该事项无需抢票或已完成出票！");
+    return;
+  }
+
+  // 格式化为北京本地时间格式 (YYYYMMDDTHHMMSS)，严格避免时区解析错乱
+  const pad = n => String(n).padStart(2, '0');
+  const formatLocal = d => {
+    return d.getFullYear() +
+      pad(d.getMonth() + 1) +
+      pad(d.getDate()) + 'T' +
+      pad(d.getHours()) +
+      pad(d.getMinutes()) +
+      pad(d.getSeconds());
+  };
+
+  const startStr = formatLocal(eventDate);
+  const endStr = formatLocal(new Date(eventDate.getTime() + 30 * 60 * 1000)); // 持续30分钟
+  const nowStr = formatLocal(new Date());
+
+  // 严格采用 \r\n 换行，适配 MIUI / HyperOS 小米日历解析器
+  const lines = [
+    'BEGIN:VCALENDAR',
+    'VERSION:2.0',
+    'PRODID:-//XiaoMi//HyperOS Calendar Compatible//CN',
+    'CALSCALE:GREGORIAN',
+    'METHOD:PUBLISH',
+    'BEGIN:VEVENT',
+    `UID:trip-${Date.now()}@miui.compat`,
+    `DTSTAMP:${nowStr}`,
+    `DTSTART;TZID=Asia/Shanghai:${startStr}`,
+    `DTEND;TZID=Asia/Shanghai:${endStr}`,
+    `SUMMARY:【抢票提醒】${title}`,
+    `DESCRIPTION:${rule.replace(/\n/g, ' ')} 入口：${channel}`,
+    'BEGIN:VALARM',
+    'ACTION:DISPLAY',
+    'DESCRIPTION:抢票提醒闹钟',
+    'TRIGGER:-PT10M', // 提前 10 分钟响铃提醒
+    'END:VALARM',
+    'END:VEVENT',
+    'END:VCALENDAR'
+  ];
+
+  // 重点：使用 \r\n 强制拼接
+  const icsContent = lines.join('\r\n');
+  const blob = new Blob([icsContent], { type: 'text/calendar;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `提醒_${title.replace(/[\s\(\)->\/]/g, '_')}.ics`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  setTimeout(() => URL.revokeObjectURL(url), 2000);
+}
 
       if (!eventDate || isNaN(eventDate.getTime())) {
         alert("该事项无需抢票或已完成出票！");
