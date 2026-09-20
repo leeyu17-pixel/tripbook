@@ -236,42 +236,13 @@
     .tag { display: inline-block; font-size: 0.68rem; font-weight: 600; padding: 1px 6px; border-radius: 6px; vertical-align: middle; }
     .tag-warn { background: var(--tag-red-bg); color: var(--tag-red-txt); border: 1px solid var(--tag-red-border); }
 
-    /* 美食专栏卡片样式 */
-    .food-grid {
-      display: flex;
-      flex-direction: column;
-      gap: 9px;
-    }
-    .food-item-card {
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      padding: 11px 13px;
-      background: var(--spot-card-bg);
-    }
-    .food-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 4px;
-    }
-    .food-name {
-      font-size: 0.95rem;
-      font-weight: 800;
-      color: var(--text-main);
-    }
-    .food-type {
-      font-size: 0.72rem;
-      font-weight: 700;
-      color: var(--accent-warm);
-      background: var(--accent-warm-bg);
-      padding: 2px 7px;
-      border-radius: 6px;
-    }
-    .food-desc {
-      font-size: 0.81rem;
-      color: var(--text-sub);
-      line-height: 1.5;
-    }
+    /* 美食卡片 */
+    .food-grid { display: flex; flex-direction: column; gap: 9px; }
+    .food-item-card { border: 1px solid var(--border); border-radius: 12px; padding: 11px 13px; background: var(--spot-card-bg); }
+    .food-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; }
+    .food-name { font-size: 0.95rem; font-weight: 800; color: var(--text-main); }
+    .food-type { font-size: 0.72rem; font-weight: 700; color: var(--accent-warm); background: var(--accent-warm-bg); padding: 2px 7px; border-radius: 6px; }
+    .food-desc { font-size: 0.81rem; color: var(--text-sub); line-height: 1.5; }
 
     /* 待办清单 */
     .todo-list { list-style: none; display: flex; flex-direction: column; gap: 10px; }
@@ -310,7 +281,6 @@
     <p id="header-subtitle"></p>
   </header>
 
-  <!-- 倒计时模块 -->
   <section class="card focus-card" id="sec-focus">
     <div class="focus-badge">Next Target · 此刻关注</div>
     <div class="focus-event" id="target-title">行程监测中...</div>
@@ -322,14 +292,12 @@
     </div>
   </section>
 
-  <!-- 交通与住宿 -->
   <section class="card" id="sec-transport">
     <div class="section-title">🚄 交通与住宿 (行程票夹)</div>
     <div id="tickets-container"></div>
     <div class="callout-box" id="ticket-note"></div>
   </section>
 
-  <!-- 抢票时刻表 -->
   <details class="card" id="sec-booking">
     <summary class="section-summary">
       <span>📅 抢票与预约时刻表</span>
@@ -340,10 +308,8 @@
     </div>
   </details>
 
-  <!-- 每日行程列表 -->
   <div id="days-container"></div>
 
-  <!-- 新增栏目：特色美食推荐 (折叠卡片) -->
   <details class="card" id="sec-foods" open>
     <summary class="section-summary">
       <span>🍲 武汉特色美食推荐 (必吃精选)</span>
@@ -354,7 +320,6 @@
     </div>
   </details>
 
-  <!-- 待办清单 -->
   <details class="card" id="sec-todo" open>
     <summary class="section-summary">
       <span>✅ 行前待办事项 (点击勾选)</span>
@@ -365,7 +330,6 @@
     </div>
   </details>
 
-  <!-- 实用贴士 -->
   <details class="card" id="sec-tips">
     <summary class="section-summary">
       <span>💡 实用出行贴士</span>
@@ -378,7 +342,6 @@
 
   <footer id="footer-text">旅行手册 · 实时数据引擎驱动</footer>
 
-  <!-- 引入业务行程数据文件 -->
   <script src="./trip-data.js"></script>
 
   <script>
@@ -388,13 +351,11 @@
         return;
       }
 
-      // 1. 标题与头部
       document.title = TRIP_DATA.meta.title;
       document.getElementById('header-title').textContent = TRIP_DATA.meta.title;
       document.getElementById('header-subtitle').textContent = TRIP_DATA.meta.subtitle;
       document.getElementById('ticket-note').textContent = TRIP_DATA.meta.ticketNote || "⚠️ 购票提示：请提前录入乘车人信息并关注放票时间。";
 
-      // 2. 药丸导航 (新增美食推荐锚点)
       const navEl = document.getElementById('nav-container');
       let navHtml = `
         <a class="nav-pill" href="#sec-transport">🚄 车票住宿</a>
@@ -409,7 +370,6 @@
       `;
       navEl.innerHTML = navHtml;
 
-      // 3. 拟物车票
       const ticketsEl = document.getElementById('tickets-container');
       let ticketsHtml = '';
       TRIP_DATA.tickets.forEach(item => {
@@ -461,7 +421,6 @@
       });
       ticketsEl.innerHTML = ticketsHtml;
 
-      // 4. 抢票时刻
       const bookingsEl = document.getElementById('bookings-container');
       let bookingsHtml = '';
       TRIP_DATA.bookings.forEach(b => {
@@ -478,7 +437,6 @@
       });
       bookingsEl.innerHTML = bookingsHtml;
 
-      // 5. 每日行程
       const daysEl = document.getElementById('days-container');
       let daysHtml = '';
       TRIP_DATA.days.forEach(d => {
@@ -537,7 +495,6 @@
       });
       daysEl.innerHTML = daysHtml;
 
-      // 6. 新增：特色美食推荐渲染
       const foodsEl = document.getElementById('foods-container');
       if (TRIP_DATA.foods && TRIP_DATA.foods.length > 0) {
         let foodsHtml = '';
@@ -555,7 +512,6 @@
         foodsEl.innerHTML = foodsHtml;
       }
 
-      // 7. 待办清单
       const todosEl = document.getElementById('todos-container');
       let todosHtml = '';
       TRIP_DATA.todos.forEach(t => {
@@ -568,7 +524,6 @@
       });
       todosEl.innerHTML = todosHtml;
 
-      // 8. 贴士
       const tipsEl = document.getElementById('tips-container');
       let tipsHtml = '';
       TRIP_DATA.tips.forEach(tp => {
