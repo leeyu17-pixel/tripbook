@@ -141,7 +141,7 @@
       padding: clamp(12px, 3.8vw, 16px);
       margin-bottom: 12px;
       box-shadow: var(--card-shadow);
-      scroll-margin-top: 90px; /* 锚点滚动预留顶部导航栏高度 */
+      scroll-margin-top: 90px;
     }
     details.card { padding: 0; overflow: hidden; }
     summary.section-summary {
@@ -644,25 +644,15 @@
   <script src="./trip-data.js"></script>
 
   <script>
-    // ========================================================
-    // 🔗 胶囊导航点击代理：展开折叠卡片并平滑滚动
-    // ========================================================
     function handleNavClick(targetId) {
       const targetEl = document.getElementById(targetId);
       if (!targetEl) return;
-      
-      // 若目标是折叠面板，点击标签时自动展开
       if (targetEl.tagName.toLowerCase() === 'details') {
         targetEl.open = true;
       }
-      
-      // 平滑滚动至视口顶部对齐
       targetEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
 
-    // ========================================================
-    // 📅 小米/安卓深度兼容：原生日历 (.ics) 生成工具
-    // ========================================================
     function createCalendarEvent(title, timeStr, rule, channel) {
       let eventDate = null;
       if (timeStr.includes('T')) {
@@ -733,9 +723,6 @@
       setTimeout(() => URL.revokeObjectURL(url), 2000);
     }
 
-    // ========================================================
-    // 🚀 主渲染引擎
-    // ========================================================
     function renderApp() {
       if (typeof TRIP_DATA === 'undefined') {
         alert("未检测到 trip-data.js 文件，请确保同级目录下存在该文件！");
@@ -747,7 +734,6 @@
       document.getElementById('header-subtitle').textContent = TRIP_DATA.meta.subtitle;
       document.getElementById('ticket-note').textContent = TRIP_DATA.meta.ticketNote || "⚠️ 购票提示：请提前录入乘车人信息并关注放票时间。";
 
-      // 药丸导航渲染（绑定 handleNavClick 点击展开跳转）
       const navEl = document.getElementById('nav-container');
       let navHtml = `
         <span class="nav-pill" onclick="handleNavClick('sec-transport')">🚄 车票住宿</span>
@@ -763,7 +749,6 @@
       `;
       navEl.innerHTML = navHtml;
 
-      // 车票住宿卡片
       const ticketsEl = document.getElementById('tickets-container');
       let ticketsHtml = '';
       TRIP_DATA.tickets.forEach(item => {
@@ -815,7 +800,6 @@
       });
       ticketsEl.innerHTML = ticketsHtml;
 
-      // 抢票时刻表
       const bookingsEl = document.getElementById('bookings-container');
       let bookingsHtml = '';
       TRIP_DATA.bookings.forEach(b => {
@@ -840,7 +824,6 @@
       });
       bookingsEl.innerHTML = bookingsHtml;
 
-      // 每日行程渲染（默认不加 open，全部折叠）
       const daysEl = document.getElementById('days-container');
       let daysHtml = '';
       TRIP_DATA.days.forEach(d => {
@@ -899,7 +882,6 @@
       });
       daysEl.innerHTML = daysHtml;
 
-      // 美食推荐渲染
       const foodsEl = document.getElementById('foods-container');
       if (TRIP_DATA.foods && TRIP_DATA.foods.length > 0) {
         let foodsHtml = '';
@@ -917,7 +899,6 @@
         foodsEl.innerHTML = foodsHtml;
       }
 
-      // 待办事项渲染
       const todosEl = document.getElementById('todos-container');
       let todosHtml = '';
       TRIP_DATA.todos.forEach(t => {
@@ -930,7 +911,6 @@
       });
       todosEl.innerHTML = todosHtml;
 
-      // 贴士渲染
       const tipsEl = document.getElementById('tips-container');
       let tipsHtml = '';
       TRIP_DATA.tips.forEach(tp => {
