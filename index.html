@@ -315,7 +315,7 @@
     <p id="header-subtitle"></p>
   </header>
 
-  <!-- 倒计时模块 (已优化为优先倒计时临近预约抢票) -->
+  <!-- 倒计时模块 (抢票预约优先加权) -->
   <section class="card focus-card" id="sec-focus">
     <div class="focus-badge" id="focus-badge-text">Next Target · 此刻关注</div>
     <div class="focus-event" id="target-title">行程监测中...</div>
@@ -333,7 +333,7 @@
     <div class="callout-box" id="ticket-note"></div>
   </section>
 
-  <!-- 抢票时刻表 (新增手机日历一键导入) -->
+  <!-- 抢票时刻表 (支持一键写入手机日历) -->
   <details class="card" id="sec-booking" open>
     <summary class="section-summary">
       <span>📅 抢票与预约时刻表 (支持导入日历)</span>
@@ -378,123 +378,79 @@
 
   <footer id="footer-text">旅行手册 · 实时数据引擎驱动</footer>
 
+  <!-- 引用外部业务数据文件 -->
   <script src="./trip-data.js"></script>
 
   <script>
-// ========================================================
-// 📅 小米/安卓手机深度兼容：原生日历 (.ics) 生成工具
-// ========================================================
-function createCalendarEvent(title, timeStr, rule, channel) {
-  let eventDate = null;
-  if (timeStr.includes('T')) {
-    eventDate = new Date(timeStr);
-  } else {
-    const match = timeStr.match(/(\d{1,2})[\.\/-](\d{1,2})\s+(\d{1,2}):(\d{1,2})/);
-    if (match) {
-      const year = 2026;
-      const month = parseInt(match[1]) - 1;
-      const day = parseInt(match[2]);
-      const hour = parseInt(match[3]);
-      const min = parseInt(match[4]);
-      eventDate = new Date(year, month, day, hour, min, 0);
-    }
-  }
-
-  if (!eventDate || isNaN(eventDate.getTime())) {
-    alert("该事项无需抢票或已完成出票！");
-    return;
-  }
-
-  // 格式化为北京本地时间格式 (YYYYMMDDTHHMMSS)，严格避免时区解析错乱
-  const pad = n => String(n).padStart(2, '0');
-  const formatLocal = d => {
-    return d.getFullYear() +
-      pad(d.getMonth() + 1) +
-      pad(d.getDate()) + 'T' +
-      pad(d.getHours()) +
-      pad(d.getMinutes()) +
-      pad(d.getSeconds());
-  };
-
-  const startStr = formatLocal(eventDate);
-  const endStr = formatLocal(new Date(eventDate.getTime() + 30 * 60 * 1000)); // 持续30分钟
-  const nowStr = formatLocal(new Date());
-
-  // 严格采用 \r\n 换行，适配 MIUI / HyperOS 小米日历解析器
-  const lines = [
-    'BEGIN:VCALENDAR',
-    'VERSION:2.0',
-    'PRODID:-//XiaoMi//HyperOS Calendar Compatible//CN',
-    'CALSCALE:GREGORIAN',
-    'METHOD:PUBLISH',
-    'BEGIN:VEVENT',
-    `UID:trip-${Date.now()}@miui.compat`,
-    `DTSTAMP:${nowStr}`,
-    `DTSTART;TZID=Asia/Shanghai:${startStr}`,
-    `DTEND;TZID=Asia/Shanghai:${endStr}`,
-    `SUMMARY:【抢票提醒】${title}`,
-    `DESCRIPTION:${rule.replace(/\n/g, ' ')} 入口：${channel}`,
-    'BEGIN:VALARM',
-    'ACTION:DISPLAY',
-    'DESCRIPTION:抢票提醒闹钟',
-    'TRIGGER:-PT10M', // 提前 10 分钟响铃提醒
-    'END:VALARM',
-    'END:VEVENT',
-    'END:VCALENDAR'
-  ];
-
-  // 重点：使用 \r\n 强制拼接
-  const icsContent = lines.join('\r\n');
-  const blob = new Blob([icsContent], { type: 'text/calendar;charset=utf-8' });
-  const url = URL.createObjectURL(blob);
-
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = `提醒_${title.replace(/[\s\(\)->\/]/g, '_')}.ics`;
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
-  setTimeout(() => URL.revokeObjectURL(url), 2000);
-}
+    // ========================================================
+    // 📅 小米/安卓深度兼容：原生日历 (.ics) 生成工具
+    // ========================================================
+    function createCalendarEvent(title, timeStr, rule, channel) {
+      let eventDate = null;
+      if (timeStr.includes('T')) {
+        eventDate = new Date(timeStr);
+      } else {
+        const match = timeStr.match(/(\d{1,2})[\.\/-](\d{1,2})\s+(\d{1,2}):(\d{1,2})/);
+        if (match) {
+          const year = 2026;
+          const month = parseInt(match[1]) - 1;
+          const day = parseInt(match[2]);
+          const hour = parseInt(match[3]);
+          const min = parseInt(match[4]);
+          eventDate = new Date(year, month, day, hour, min, 0);
+        }
+      }
 
       if (!eventDate || isNaN(eventDate.getTime())) {
         alert("该事项无需抢票或已完成出票！");
         return;
       }
 
-      const startDateStr = formatDateToICS(eventDate);
-      const endDate = new Date(eventDate.getTime() + 30 * 60 * 1000); // 持续30分钟
-      const endDateStr = formatDateToICS(endDate);
-      const nowStr = formatDateToICS(new Date());
+      // 格式化为北京本地时间格式 (YYYYMMDDTHHMMSS)，适配 MIUI/HyperOS 解析
+      const pad = n => String(n).padStart(2, '0');
+      const formatLocal = d => {
+        return d.getFullYear() +
+          pad(d.getMonth() + 1) +
+          pad(d.getDate()) + 'T' +
+          pad(d.getHours()) +
+          pad(d.getMinutes()) +
+          pad(d.getSeconds());
+      };
 
-      const icsData = 
-`BEGIN:VCALENDAR
-VERSION:2.0
-PRODID:-//TravelManual//CN
-CALSCALE:GREGORIAN
-METHOD:PUBLISH
-BEGIN:VEVENT
-UID:trip-${Date.now()}@travelmanual
-DTSTAMP:${nowStr}
-DTSTART:${startDateStr}
-DTEND:${endDateStr}
-SUMMARY:【抢票提醒】${title}
-DESCRIPTION:${rule}\\n入口：${channel}
-BEGIN:VALARM
-ACTION:DISPLAY
-DESCRIPTION:抢票闹钟
-TRIGGER:-PT10M
-END:VALARM
-END:VEVENT
-END:VCALENDAR`;
+      const startStr = formatLocal(eventDate);
+      const endStr = formatLocal(new Date(eventDate.getTime() + 30 * 60 * 1000));
+      const nowStr = formatLocal(new Date());
 
-      const blob = new Blob([icsData], { type: 'text/calendar;charset=utf-8' });
+      // 严格采用 \r\n (CRLF) 换行，防止小米日历识别为空
+      const lines = [
+        'BEGIN:VCALENDAR',
+        'VERSION:2.0',
+        'PRODID:-//XiaoMi//HyperOS Calendar Compatible//CN',
+        'CALSCALE:GREGORIAN',
+        'METHOD:PUBLISH',
+        'BEGIN:VEVENT',
+        `UID:trip-${Date.now()}@miui.compat`,
+        `DTSTAMP:${nowStr}`,
+        `DTSTART;TZID=Asia/Shanghai:${startStr}`,
+        `DTEND;TZID=Asia/Shanghai:${endStr}`,
+        `SUMMARY:【抢票提醒】${title}`,
+        `DESCRIPTION:${rule.replace(/\n/g, ' ')} 入口：${channel}`,
+        'BEGIN:VALARM',
+        'ACTION:DISPLAY',
+        'DESCRIPTION:抢票提醒闹钟',
+        'TRIGGER:-PT10M',
+        'END:VALARM',
+        'END:VEVENT',
+        'END:VCALENDAR'
+      ];
+
+      const icsContent = lines.join('\r\n');
+      const blob = new Blob([icsContent], { type: 'text/calendar;charset=utf-8' });
       const url = URL.createObjectURL(blob);
 
-      // iOS Safari 或 Android 浏览器触发日历下载与唤醒
       const a = document.createElement('a');
       a.href = url;
-      a.download = `提醒_${title.replace(/[\s\(\)->]/g, '_')}.ics`;
+      a.download = `提醒_${title.replace(/[\s\(\)->\/]/g, '_')}.ics`;
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
@@ -502,7 +458,7 @@ END:VCALENDAR`;
     }
 
     // ========================================================
-    // 🚀 主渲染逻辑
+    // 🚀 主渲染引擎
     // ========================================================
     function renderApp() {
       if (typeof TRIP_DATA === 'undefined') {
@@ -530,7 +486,7 @@ END:VCALENDAR`;
       `;
       navEl.innerHTML = navHtml;
 
-      // 车票卡片
+      // 车票住宿卡片
       const ticketsEl = document.getElementById('tickets-container');
       let ticketsHtml = '';
       TRIP_DATA.tickets.forEach(item => {
@@ -582,10 +538,10 @@ END:VCALENDAR`;
       });
       ticketsEl.innerHTML = ticketsHtml;
 
-      // 抢票时刻表 (新增 📅 加提醒 交互)
+      // 抢票时刻表 (增加一键日历提醒)
       const bookingsEl = document.getElementById('bookings-container');
       let bookingsHtml = '';
-      TRIP_DATA.bookings.forEach((b, idx) => {
+      TRIP_DATA.bookings.forEach(b => {
         const canSetReminder = !b.time.includes('已') && !b.time.includes('无需');
         const calBtnHtml = canSetReminder
           ? `<button class="add-cal-btn" onclick="createCalendarEvent('${b.target}', '${b.time}', '${b.rule}', '${b.channel}')">📅 加提醒</button>`
@@ -607,7 +563,7 @@ END:VCALENDAR`;
       });
       bookingsEl.innerHTML = bookingsHtml;
 
-      // 每日行程
+      // 每日行程渲染
       const daysEl = document.getElementById('days-container');
       let daysHtml = '';
       TRIP_DATA.days.forEach(d => {
@@ -666,7 +622,7 @@ END:VCALENDAR`;
       });
       daysEl.innerHTML = daysHtml;
 
-      // 美食卡片
+      // 美食推荐渲染
       const foodsEl = document.getElementById('foods-container');
       if (TRIP_DATA.foods && TRIP_DATA.foods.length > 0) {
         let foodsHtml = '';
@@ -684,7 +640,7 @@ END:VCALENDAR`;
         foodsEl.innerHTML = foodsHtml;
       }
 
-      // 待办清单
+      // 待办事项渲染
       const todosEl = document.getElementById('todos-container');
       let todosHtml = '';
       TRIP_DATA.todos.forEach(t => {
@@ -697,7 +653,7 @@ END:VCALENDAR`;
       });
       todosEl.innerHTML = todosHtml;
 
-      // 贴士
+      // 贴士渲染
       const tipsEl = document.getElementById('tips-container');
       let tipsHtml = '';
       TRIP_DATA.tips.forEach(tp => {
@@ -710,6 +666,7 @@ END:VCALENDAR`;
       initCountdown();
     }
 
+    // 展开/收起景点介绍
     function toggleSpotCard(key, btn) {
       const card = document.getElementById('card-' + key);
       if (!card) return;
@@ -723,6 +680,7 @@ END:VCALENDAR`;
       }
     }
 
+    // 高德地图唤起逻辑
     function navTo(lng, lat, name) {
       const u = navigator.userAgent;
       const isIOS = !!u.match(/\(i[^;]+;( U;)? CPU.+Mac OS X/);
@@ -753,6 +711,7 @@ END:VCALENDAR`;
       }
     }
 
+    // 待办事项勾选状态与持久化
     function toggleTodoItem(itemEl) {
       const cb = itemEl.querySelector('.todo-checkbox');
       cb.checked = !cb.checked;
@@ -782,6 +741,7 @@ END:VCALENDAR`;
       });
     }
 
+    // 时间感知展开
     function syncDayAccordionByTime() {
       const now = new Date();
       const dayCards = document.querySelectorAll('.day-accordion-item');
@@ -807,29 +767,27 @@ END:VCALENDAR`;
       }
     }
 
-    // ========================================================
-    // ⏱️ 「此刻关注」抢票优先加权计算引擎
-    // ========================================================
+    // 抢票优先倒计时引擎
     function initCountdown() {
-      // 1. 搜集抢票时刻并转为时间节点
       const bookingTargets = [];
-      TRIP_DATA.bookings.forEach(b => {
-        const match = b.time.match(/(\d{1,2})[\.\/-](\d{1,2})\s+(\d{1,2}):(\d{1,2})/);
-        if (match) {
-          const year = 2026;
-          const month = parseInt(match[1]) - 1;
-          const day = parseInt(match[2]);
-          const hour = parseInt(match[3]);
-          const min = parseInt(match[4]);
-          bookingTargets.push({
-            name: `【卡点抢票】${b.target}`,
-            time: new Date(year, month, day, hour, min, 0),
-            isBooking: true
-          });
-        }
-      });
+      if (TRIP_DATA.bookings) {
+        TRIP_DATA.bookings.forEach(b => {
+          const match = b.time.match(/(\d{1,2})[\.\/-](\d{1,2})\s+(\d{1,2}):(\d{1,2})/);
+          if (match) {
+            const year = 2026;
+            const month = parseInt(match[1]) - 1;
+            const day = parseInt(match[2]);
+            const hour = parseInt(match[3]);
+            const min = parseInt(match[4]);
+            bookingTargets.push({
+              name: `【卡点抢票】${b.target}`,
+              time: new Date(year, month, day, hour, min, 0),
+              isBooking: true
+            });
+          }
+        });
+      }
 
-      // 2. 常规行程节点
       const regularMilestones = TRIP_DATA.milestones.map(m => ({
         name: m.name,
         time: new Date(m.time),
@@ -840,14 +798,10 @@ END:VCALENDAR`;
         const now = new Date();
         let target = null;
 
-        // 【规则加权】：出行前，优先检测是否有未过期的“抢票/预约”任务
         const upcomingBookings = bookingTargets.filter(b => b.time > now).sort((a, b) => a.time - b.time);
-        
         if (upcomingBookings.length > 0) {
-          // 若有临近抢票，抢票优先级最高！
           target = upcomingBookings[0];
         } else {
-          // 所有抢票完成后，自然回切至下一个行程节点
           const upcomingRegular = regularMilestones.filter(m => m.time > now).sort((a, b) => a.time - b.time);
           if (upcomingRegular.length > 0) {
             target = upcomingRegular[0];
