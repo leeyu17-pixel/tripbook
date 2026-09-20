@@ -151,7 +151,7 @@
       gap: 6px;
     }
 
-    /* 顶部倒计时 */
+    /* 顶部倒计时卡片 */
     .focus-card {
       background: linear-gradient(135deg, rgba(194, 65, 12, 0.05) 0%, rgba(245, 158, 11, 0.03) 100%);
       border: 1.5px solid rgba(194, 65, 12, 0.2);
@@ -167,7 +167,56 @@
       letter-spacing: 0.04em;
       margin-bottom: 6px;
     }
-    .focus-event { font-size: 1.15rem; font-weight: 800; margin-bottom: 12px; color: var(--text-main); }
+    .focus-event { font-size: 1.15rem; font-weight: 800; margin-bottom: 10px; color: var(--text-main); }
+    
+    /* 当天乘车特别看板 */
+    .today-train-highlight {
+      display: none;
+      background: var(--card-bg);
+      border: 1.5px solid var(--accent-warm);
+      border-radius: 14px;
+      padding: 10px 12px;
+      margin-bottom: 12px;
+      box-shadow: 0 2px 8px rgba(194, 65, 12, 0.08);
+    }
+    .today-train-highlight.active { display: block; }
+    .tth-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px dashed var(--border);
+      padding-bottom: 6px;
+      margin-bottom: 8px;
+    }
+    .tth-train-no {
+      font-size: 1.12rem;
+      font-weight: 900;
+      color: var(--accent-warm);
+    }
+    .tth-depart-time {
+      font-size: 0.88rem;
+      font-weight: 800;
+      color: var(--text-main);
+    }
+    .tth-route-line {
+      font-size: 0.86rem;
+      font-weight: 700;
+      color: var(--text-sub);
+      margin-bottom: 6px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .tth-seats-box {
+      background: var(--accent-warm-bg);
+      border-radius: 8px;
+      padding: 6px 10px;
+      font-size: 0.82rem;
+      font-weight: 800;
+      color: var(--accent-warm);
+      line-height: 1.45;
+    }
+
     .timer-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; text-align: center; }
     .timer-box { background: var(--card-bg); border: 1px solid var(--border); border-radius: 12px; padding: 8px 4px; }
     .timer-val { font-size: 1.3rem; font-weight: 800; font-variant-numeric: tabular-nums; color: var(--accent-warm); line-height: 1.1; }
@@ -319,10 +368,21 @@
     <p id="header-subtitle"></p>
   </header>
 
-  <!-- 倒计时模块 -->
+  <!-- 倒计时模块 (支持乘车日关键车次/座位号高亮置顶) -->
   <section class="card focus-card" id="sec-focus">
     <div class="focus-badge" id="focus-badge-text">Next Target · 此刻关注</div>
     <div class="focus-event" id="target-title">行程监测中...</div>
+
+    <!-- 当天乘车专属高亮卡片 -->
+    <div class="today-train-highlight" id="train-highlight-box">
+      <div class="tth-header">
+        <span class="tth-train-no" id="tth-train-no">G4073 次</span>
+        <span class="tth-depart-time" id="tth-depart-time">出发时间：19:48</span>
+      </div>
+      <div class="tth-route-line" id="tth-route-line">上海南站 ➔ 汉口站</div>
+      <div class="tth-seats-box" id="tth-seats-box">车厢与座号分配中...</div>
+    </div>
+
     <div class="timer-grid">
       <div class="timer-box"><div class="timer-val" id="t-d">00</div><div class="timer-lbl">天</div></div>
       <div class="timer-box"><div class="timer-val" id="t-h">00</div><div class="timer-lbl">时</div></div>
@@ -370,6 +430,7 @@
     </div>
   </details>
 
+  <!-- 实用贴士 -->
   <details class="card" id="sec-tips">
     <summary class="section-summary">
       <span>💡 实用出行贴士</span>
@@ -472,7 +533,7 @@
       document.getElementById('header-subtitle').textContent = TRIP_DATA.meta.subtitle;
       document.getElementById('ticket-note').textContent = TRIP_DATA.meta.ticketNote || "⚠️ 购票提示：请提前录入乘车人信息并关注放票时间。";
 
-      // 药丸导航渲染
+      // 药丸导航渲染（补齐【出行贴士】）
       const navEl = document.getElementById('nav-container');
       let navHtml = `
         <a class="nav-pill" href="#sec-transport">🚄 车票住宿</a>
@@ -484,6 +545,7 @@
       navHtml += `
         <a class="nav-pill" href="#sec-foods">🍲 美食推荐</a>
         <a class="nav-pill" href="#sec-todo">✅ 待办事项</a>
+        <a class="nav-pill" href="#sec-tips">💡 出行贴士</a>
       `;
       navEl.innerHTML = navHtml;
 
@@ -764,6 +826,9 @@
       }
     }
 
+    // ========================================================
+    // ⏱️ 「此刻关注」抢票优先与当天乘车高亮计算引擎
+    // ========================================================
     function initCountdown() {
       const bookingTargets = [];
       if (TRIP_DATA.bookings) {
@@ -790,37 +855,85 @@
         isBooking: false
       }));
 
+      // 提取所有火车票数据
+      const trainTickets = (TRIP_DATA.tickets || []).filter(t => t.type === 'transport');
+
       function update() {
         const now = new Date();
-        let target = null;
+        const nowMonth = now.getMonth() + 1;
+        const nowDate = now.getDate();
 
+        // 1. 检测当天是否有乘车计划
+        let todayTrain = null;
+        for (let t of trainTickets) {
+          // 匹配 badge 中的日期，例如 "9/30" 或 "10/3"
+          const dateMatch = t.badge.match(/(\d{1,2})\/(\d{1,2})/);
+          if (dateMatch) {
+            const tMonth = parseInt(dateMatch[1]);
+            const tDate = parseInt(dateMatch[2]);
+            if (tMonth === nowMonth && tDate === nowDate) {
+              todayTrain = t;
+              break;
+            }
+          }
+        }
+
+        const trainBox = document.getElementById("train-highlight-box");
+        const badgeEl = document.getElementById("focus-badge-text");
+        const titleEl = document.getElementById("target-title");
+
+        // 如果当天有乘车出发任务，激活专属高亮看板
+        if (todayTrain) {
+          trainBox.classList.add("active");
+          badgeEl.textContent = "🚄 今日乘车提醒";
+          
+          // 提取车次名称
+          const trainNoMatch = todayTrain.badge.match(/([A-Z0-9]+)\s*次/);
+          const trainNo = trainNoMatch ? trainNoMatch[1] : "火车专列";
+          
+          document.getElementById("tth-train-no").textContent = `${trainNo} 次`;
+          document.getElementById("tth-depart-time").textContent = `发车时间：${todayTrain.fromTime}`;
+          document.getElementById("tth-route-line").textContent = `${todayTrain.fromName} ➔ ${todayTrain.toName} (${todayTrain.transitDuration})`;
+          document.getElementById("tth-seats-box").textContent = `💺 席位：${todayTrain.footerText}`;
+          titleEl.textContent = `准备出发 · 搭乘 ${trainNo} 次`;
+        } else {
+          trainBox.classList.remove("active");
+        }
+
+        // 2. 目标倒计时选取逻辑
+        let target = null;
         const upcomingBookings = bookingTargets.filter(b => b.time > now).sort((a, b) => a.time - b.time);
         if (upcomingBookings.length > 0) {
           target = upcomingBookings[0];
+          if (!todayTrain) {
+            badgeEl.textContent = "Urgent Ticket · 抢票倒计时";
+            titleEl.textContent = target.name;
+          }
         } else {
           const upcomingRegular = regularMilestones.filter(m => m.time > now).sort((a, b) => a.time - b.time);
           if (upcomingRegular.length > 0) {
             target = upcomingRegular[0];
+            if (!todayTrain) {
+              badgeEl.textContent = "Next Target · 此刻关注";
+              titleEl.textContent = target.name;
+            }
           }
         }
 
-        const badgeEl = document.getElementById("focus-badge-text");
-        const titleEl = document.getElementById("target-title");
         const dEl = document.getElementById("t-d");
         const hEl = document.getElementById("t-h");
         const mEl = document.getElementById("t-m");
         const sEl = document.getElementById("t-s");
 
         if (!target) {
-          badgeEl.textContent = "Trip Completed · 行程圆满";
-          titleEl.textContent = "行程已圆满结束";
+          if (!todayTrain) {
+            badgeEl.textContent = "Trip Completed · 行程圆满";
+            titleEl.textContent = "行程已圆满结束";
+          }
           dEl.textContent = "00"; hEl.textContent = "00"; mEl.textContent = "00"; sEl.textContent = "00";
           return;
         }
 
-        badgeEl.textContent = target.isBooking ? "Urgent Ticket · 抢票倒计时" : "Next Target · 此刻关注";
-        titleEl.textContent = target.name;
-        
         const diff = Math.max(0, target.time - now);
         const days = Math.floor(diff / (1000 * 60 * 60 * 24));
         const hours = Math.floor((diff / (1000 * 60 * 60)) % 24);
