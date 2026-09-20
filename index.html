@@ -64,36 +64,40 @@
       letter-spacing: -0.01em;
     }
 
+    /* 顶部自适应换行胶囊导航 */
     .sticky-nav-bar {
       position: sticky;
       top: 0;
       z-index: 100;
-      background: rgba(247, 246, 241, 0.94);
+      background: rgba(247, 246, 241, 0.96);
       backdrop-filter: blur(12px);
       -webkit-backdrop-filter: blur(12px);
-      padding: 8px 0 10px;
-      margin: 0 -14px 10px;
+      padding: 10px 0 10px;
+      margin: 0 -14px 12px;
       padding-left: 14px;
-      overflow-x: auto;
-      white-space: nowrap;
+      padding-right: 14px;
       display: flex;
-      gap: 8px;
-      scrollbar-width: none;
+      flex-wrap: wrap;
+      gap: 7px 6px;
+      overflow: visible;
+      white-space: normal;
     }
-    .sticky-nav-bar::-webkit-scrollbar { display: none; }
+
     .nav-pill {
       display: inline-flex;
       align-items: center;
       background: var(--card-bg);
       border: 1px solid var(--border);
       color: var(--text-sub);
-      font-size: 0.78rem;
+      font-size: 0.74rem;
       font-weight: 700;
-      padding: 6px 13px;
+      padding: 5px 10px;
       border-radius: 999px;
       text-decoration: none;
-      box-shadow: 0 1px 3px rgba(0,0,0,0.02);
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
       flex-shrink: 0;
+      white-space: nowrap;
+      line-height: 1.2;
     }
     .nav-pill:active {
       transform: scale(0.96);
@@ -315,7 +319,7 @@
     <p id="header-subtitle"></p>
   </header>
 
-  <!-- 倒计时模块 (抢票预约优先加权) -->
+  <!-- 倒计时模块 -->
   <section class="card focus-card" id="sec-focus">
     <div class="focus-badge" id="focus-badge-text">Next Target · 此刻关注</div>
     <div class="focus-event" id="target-title">行程监测中...</div>
@@ -333,7 +337,7 @@
     <div class="callout-box" id="ticket-note"></div>
   </section>
 
-  <!-- 抢票时刻表 (支持一键写入手机日历) -->
+  <!-- 抢票时刻表 -->
   <details class="card" id="sec-booking" open>
     <summary class="section-summary">
       <span>📅 抢票与预约时刻表 (支持导入日历)</span>
@@ -378,7 +382,6 @@
 
   <footer id="footer-text">旅行手册 · 实时数据引擎驱动</footer>
 
-  <!-- 引用外部业务数据文件 -->
   <script src="./trip-data.js"></script>
 
   <script>
@@ -406,7 +409,6 @@
         return;
       }
 
-      // 格式化为北京本地时间格式 (YYYYMMDDTHHMMSS)，适配 MIUI/HyperOS 解析
       const pad = n => String(n).padStart(2, '0');
       const formatLocal = d => {
         return d.getFullYear() +
@@ -421,7 +423,6 @@
       const endStr = formatLocal(new Date(eventDate.getTime() + 30 * 60 * 1000));
       const nowStr = formatLocal(new Date());
 
-      // 严格采用 \r\n (CRLF) 换行，防止小米日历识别为空
       const lines = [
         'BEGIN:VCALENDAR',
         'VERSION:2.0',
@@ -471,7 +472,7 @@
       document.getElementById('header-subtitle').textContent = TRIP_DATA.meta.subtitle;
       document.getElementById('ticket-note').textContent = TRIP_DATA.meta.ticketNote || "⚠️ 购票提示：请提前录入乘车人信息并关注放票时间。";
 
-      // 药丸导航
+      // 药丸导航渲染
       const navEl = document.getElementById('nav-container');
       let navHtml = `
         <a class="nav-pill" href="#sec-transport">🚄 车票住宿</a>
@@ -538,7 +539,7 @@
       });
       ticketsEl.innerHTML = ticketsHtml;
 
-      // 抢票时刻表 (增加一键日历提醒)
+      // 抢票时刻表
       const bookingsEl = document.getElementById('bookings-container');
       let bookingsHtml = '';
       TRIP_DATA.bookings.forEach(b => {
@@ -666,7 +667,6 @@
       initCountdown();
     }
 
-    // 展开/收起景点介绍
     function toggleSpotCard(key, btn) {
       const card = document.getElementById('card-' + key);
       if (!card) return;
@@ -680,7 +680,6 @@
       }
     }
 
-    // 高德地图唤起逻辑
     function navTo(lng, lat, name) {
       const u = navigator.userAgent;
       const isIOS = !!u.match(/\(i[^;]+;( U;)? CPU.+Mac OS X/);
@@ -711,7 +710,6 @@
       }
     }
 
-    // 待办事项勾选状态与持久化
     function toggleTodoItem(itemEl) {
       const cb = itemEl.querySelector('.todo-checkbox');
       cb.checked = !cb.checked;
@@ -741,7 +739,6 @@
       });
     }
 
-    // 时间感知展开
     function syncDayAccordionByTime() {
       const now = new Date();
       const dayCards = document.querySelectorAll('.day-accordion-item');
@@ -767,7 +764,6 @@
       }
     }
 
-    // 抢票优先倒计时引擎
     function initCountdown() {
       const bookingTargets = [];
       if (TRIP_DATA.bookings) {
