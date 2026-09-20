@@ -2,7 +2,7 @@
 <html lang="zh-CN">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <title id="page-title">旅行手册</title>
   <style>
     :root {
@@ -51,17 +51,29 @@
       }
     }
 
-    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
-    html { scroll-behavior: smooth; }
+    * { 
+      box-sizing: border-box; 
+      margin: 0; 
+      padding: 0; 
+      -webkit-tap-highlight-color: transparent; 
+    }
+    
+    html { 
+      scroll-behavior: smooth; 
+      font-size: 16px;
+    }
+
     body {
       font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
       background-color: var(--bg);
       color: var(--text-main);
       line-height: 1.55;
-      padding: 10px 14px 48px;
+      padding: 10px clamp(10px, 3.5vw, 16px) calc(48px + env(safe-area-inset-bottom));
       max-width: 580px;
       margin: 0 auto;
       letter-spacing: -0.01em;
+      word-wrap: break-word;
+      overflow-wrap: break-word;
     }
 
     /* 顶部自适应换行胶囊导航 */
@@ -72,13 +84,13 @@
       background: rgba(247, 246, 241, 0.96);
       backdrop-filter: blur(12px);
       -webkit-backdrop-filter: blur(12px);
-      padding: 10px 0 10px;
-      margin: 0 -14px 12px;
-      padding-left: 14px;
-      padding-right: 14px;
+      padding: 8px 0 10px;
+      margin: 0 -14px 10px;
+      padding-left: clamp(10px, 3.5vw, 16px);
+      padding-right: clamp(10px, 3.5vw, 16px);
       display: flex;
       flex-wrap: wrap;
-      gap: 7px 6px;
+      gap: 6px 5px;
       overflow: visible;
       white-space: normal;
     }
@@ -89,15 +101,16 @@
       background: var(--card-bg);
       border: 1px solid var(--border);
       color: var(--text-sub);
-      font-size: 0.74rem;
+      font-size: clamp(0.7rem, 2.2vw, 0.76rem);
       font-weight: 700;
-      padding: 5px 10px;
+      padding: 4px 9px;
       border-radius: 999px;
       text-decoration: none;
       box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
       flex-shrink: 0;
       white-space: nowrap;
-      line-height: 1.2;
+      line-height: 1.25;
+      cursor: pointer;
     }
     .nav-pill:active {
       transform: scale(0.96);
@@ -105,25 +118,43 @@
       color: var(--accent-warm);
     }
 
+    header {
+      margin-bottom: 12px;
+      padding: 0 2px;
+    }
+    #header-title {
+      font-size: clamp(1.25rem, 5vw, 1.55rem);
+      font-weight: 900;
+      line-height: 1.2;
+    }
+    #header-subtitle {
+      font-size: clamp(0.75rem, 2.8vw, 0.85rem);
+      color: var(--text-sub);
+      margin-top: 4px;
+      line-height: 1.4;
+    }
+
     .card {
       background: var(--card-bg);
       border: 1px solid var(--border);
-      border-radius: 20px;
-      padding: 16px;
-      margin-bottom: 14px;
+      border-radius: clamp(14px, 4vw, 20px);
+      padding: clamp(12px, 3.8vw, 16px);
+      margin-bottom: 12px;
       box-shadow: var(--card-shadow);
+      scroll-margin-top: 90px; /* 锚点滚动预留顶部导航栏高度 */
     }
     details.card { padding: 0; overflow: hidden; }
     summary.section-summary {
       list-style: none;
-      font-size: 0.98rem;
+      font-size: clamp(0.88rem, 3.2vw, 0.98rem);
       font-weight: 800;
-      padding: 15px 16px;
+      padding: clamp(12px, 3.5vw, 15px) clamp(12px, 3.8vw, 16px);
       cursor: pointer;
       display: flex;
       justify-content: space-between;
       align-items: center;
       user-select: none;
+      gap: 8px;
     }
     summary.section-summary::-webkit-details-marker { display: none; }
     .arrow-icon {
@@ -138,17 +169,9 @@
     }
     details[open] > summary.section-summary .arrow-icon { transform: rotate(45deg); }
     .details-body {
-      padding: 0 16px 16px 16px;
+      padding: 0 clamp(12px, 3.8vw, 16px) clamp(12px, 3.8vw, 16px);
       border-top: 1px solid var(--border-inner);
-      padding-top: 14px;
-    }
-    .section-title {
-      font-size: 1.05rem;
-      font-weight: 800;
-      margin-bottom: 12px;
-      display: flex;
-      align-items: center;
-      gap: 6px;
+      padding-top: 12px;
     }
 
     /* 顶部倒计时卡片 */
@@ -160,23 +183,29 @@
       display: inline-flex;
       align-items: center;
       gap: 4px;
-      font-size: 0.72rem;
+      font-size: clamp(0.68rem, 2.2vw, 0.72rem);
       font-weight: 800;
       color: var(--accent-warm);
       text-transform: uppercase;
       letter-spacing: 0.04em;
-      margin-bottom: 6px;
+      margin-bottom: 4px;
     }
-    .focus-event { font-size: 1.15rem; font-weight: 800; margin-bottom: 10px; color: var(--text-main); }
+    .focus-event { 
+      font-size: clamp(0.98rem, 3.8vw, 1.15rem); 
+      font-weight: 800; 
+      margin-bottom: 10px; 
+      color: var(--text-main); 
+      line-height: 1.35;
+    }
     
-    /* 当天乘车特别看板 */
+    /* 当天乘车专属高亮卡片 */
     .today-train-highlight {
       display: none;
       background: var(--card-bg);
       border: 1.5px solid var(--accent-warm);
       border-radius: 14px;
-      padding: 10px 12px;
-      margin-bottom: 12px;
+      padding: clamp(9px, 2.8vw, 12px);
+      margin-bottom: 10px;
       box-shadow: 0 2px 8px rgba(194, 65, 12, 0.08);
     }
     .today-train-highlight.active { display: block; }
@@ -186,74 +215,156 @@
       align-items: center;
       border-bottom: 1px dashed var(--border);
       padding-bottom: 6px;
-      margin-bottom: 8px;
+      margin-bottom: 6px;
+      gap: 6px;
     }
     .tth-train-no {
-      font-size: 1.12rem;
+      font-size: clamp(0.95rem, 3.5vw, 1.12rem);
       font-weight: 900;
       color: var(--accent-warm);
     }
     .tth-depart-time {
-      font-size: 0.88rem;
+      font-size: clamp(0.78rem, 2.8vw, 0.88rem);
       font-weight: 800;
       color: var(--text-main);
     }
     .tth-route-line {
-      font-size: 0.86rem;
+      font-size: clamp(0.78rem, 2.7vw, 0.86rem);
       font-weight: 700;
       color: var(--text-sub);
       margin-bottom: 6px;
       display: flex;
       align-items: center;
-      gap: 6px;
+      gap: 4px;
+      flex-wrap: wrap;
     }
     .tth-seats-box {
       background: var(--accent-warm-bg);
       border-radius: 8px;
-      padding: 6px 10px;
-      font-size: 0.82rem;
+      padding: 6px 8px;
+      font-size: clamp(0.74rem, 2.6vw, 0.82rem);
       font-weight: 800;
       color: var(--accent-warm);
       line-height: 1.45;
+      word-break: break-word;
     }
 
-    .timer-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; text-align: center; }
-    .timer-box { background: var(--card-bg); border: 1px solid var(--border); border-radius: 12px; padding: 8px 4px; }
-    .timer-val { font-size: 1.3rem; font-weight: 800; font-variant-numeric: tabular-nums; color: var(--accent-warm); line-height: 1.1; }
-    .timer-lbl { font-size: 0.68rem; color: var(--text-muted); font-weight: 600; margin-top: 2px; }
+    .timer-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: clamp(4px, 1.5vw, 6px); text-align: center; }
+    .timer-box { background: var(--card-bg); border: 1px solid var(--border); border-radius: 10px; padding: 6px 2px; }
+    .timer-val { font-size: clamp(1.1rem, 4vw, 1.3rem); font-weight: 800; font-variant-numeric: tabular-nums; color: var(--accent-warm); line-height: 1.1; }
+    .timer-lbl { font-size: 0.65rem; color: var(--text-muted); font-weight: 600; margin-top: 2px; }
 
     /* 拟物卡片 */
     .ticket-card {
       background: var(--card-bg);
       border: 1px solid var(--border);
-      border-radius: 18px;
-      padding: 14px 16px;
+      border-radius: 16px;
+      padding: clamp(12px, 3.5vw, 15px);
       margin-bottom: 10px;
     }
     .ticket-card:last-child { margin-bottom: 0; }
-    .ticket-header { display: flex; justify-content: space-between; align-items: center; font-size: 0.78rem; color: var(--text-sub); font-weight: 600; margin-bottom: 8px; }
-    .ticket-pill { font-size: 0.7rem; font-weight: 700; padding: 2px 8px; border-radius: 6px; line-height: 1.2; }
+    .ticket-header { 
+      display: flex; 
+      justify-content: space-between; 
+      align-items: center; 
+      font-size: clamp(0.72rem, 2.5vw, 0.78rem); 
+      color: var(--text-sub); 
+      font-weight: 600; 
+      margin-bottom: 8px;
+      gap: 6px;
+    }
+    .ticket-pill { 
+      font-size: clamp(0.65rem, 2.2vw, 0.7rem); 
+      font-weight: 700; 
+      padding: 2px 7px; 
+      border-radius: 6px; 
+      line-height: 1.2; 
+      white-space: nowrap;
+    }
     .ticket-pill.confirmed { background: var(--tag-green-bg); color: var(--tag-green-txt); border: 1px solid var(--tag-green-border); }
     .ticket-pill.pending { background: var(--tag-red-bg); color: var(--tag-red-txt); border: 1px solid var(--tag-red-border); }
-    .ticket-route { display: flex; align-items: center; justify-content: space-between; margin: 10px 0 8px; }
-    .station-col { flex: 1; }
+    
+    .ticket-route { 
+      display: flex; 
+      align-items: center; 
+      justify-content: space-between; 
+      margin: 8px 0; 
+      gap: 4px;
+    }
+    .station-col { 
+      flex: 1.2; 
+      min-width: 0; 
+    }
     .station-col.right { text-align: right; }
-    .station-name { font-size: 1.25rem; font-weight: 900; letter-spacing: -0.01em; line-height: 1.2; }
-    .station-meta { font-size: 0.88rem; font-weight: 700; color: var(--text-sub); margin-top: 4px; font-variant-numeric: tabular-nums; }
-    .route-transit-info { display: flex; flex-direction: column; align-items: center; padding: 0 8px; position: relative; }
-    .transit-duration { font-size: 0.72rem; font-weight: 600; color: var(--text-muted); margin-bottom: 2px; }
-    .transit-line-bar { width: 80px; height: 1px; background: var(--border); position: relative; }
-    .transit-line-bar-icon { position: absolute; top: -8px; left: 32px; font-size: 11px; line-height: 1; }
-    .ticket-footer { border-top: 1px dashed var(--border); padding-top: 8px; margin-top: 8px; font-size: 0.75rem; color: var(--text-muted); display: flex; justify-content: space-between; align-items: center; }
-    .ticket-action { color: var(--accent); font-weight: 600; text-decoration: none; cursor: pointer; }
+    .station-name { 
+      font-size: clamp(1.02rem, 4vw, 1.25rem); 
+      font-weight: 900; 
+      letter-spacing: -0.01em; 
+      line-height: 1.2; 
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .station-meta { 
+      font-size: clamp(0.78rem, 2.8vw, 0.88rem); 
+      font-weight: 700; 
+      color: var(--text-sub); 
+      margin-top: 3px; 
+      font-variant-numeric: tabular-nums; 
+    }
+    
+    .route-transit-info { 
+      display: flex; 
+      flex-direction: column; 
+      align-items: center; 
+      padding: 0 4px; 
+      flex: 1;
+      min-width: 60px;
+    }
+    .transit-duration { 
+      font-size: clamp(0.65rem, 2.2vw, 0.72rem); 
+      font-weight: 600; 
+      color: var(--text-muted); 
+      margin-bottom: 2px; 
+      white-space: nowrap;
+    }
+    .transit-line-bar { 
+      width: 100%; 
+      max-width: 70px;
+      height: 1px; 
+      background: var(--border); 
+      position: relative; 
+    }
+    .transit-line-bar-icon { 
+      position: absolute; 
+      top: -7px; 
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 11px; 
+      line-height: 1; 
+    }
+    
+    .ticket-footer { 
+      border-top: 1px dashed var(--border); 
+      padding-top: 8px; 
+      margin-top: 8px; 
+      font-size: clamp(0.7rem, 2.5vw, 0.75rem); 
+      color: var(--text-muted); 
+      display: flex; 
+      justify-content: space-between; 
+      align-items: center; 
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+    .ticket-action { color: var(--accent); font-weight: 600; text-decoration: none; cursor: pointer; white-space: nowrap; }
 
     /* 每日行程印章与时间轴 */
-    .day-header-box { display: flex; align-items: center; gap: 12px; }
+    .day-header-box { display: flex; align-items: center; gap: clamp(8px, 2.5vw, 12px); min-width: 0; }
     .date-stamp {
       color: #fff;
-      border-radius: 12px;
-      width: 44px;
-      height: 44px;
+      border-radius: 10px;
+      width: clamp(38px, 11vw, 44px);
+      height: clamp(38px, 11vw, 44px);
       display: flex;
       flex-direction: column;
       align-items: center;
@@ -262,59 +373,125 @@
       line-height: 1.1;
       box-shadow: 0 3px 8px rgba(0, 0, 0, 0.12);
     }
-    .date-stamp-d { font-size: 0.98rem; font-weight: 900; }
-    .date-stamp-w { font-size: 0.65rem; font-weight: 600; opacity: 0.92; }
+    .date-stamp-d { font-size: clamp(0.85rem, 3.2vw, 0.98rem); font-weight: 900; }
+    .date-stamp-w { font-size: clamp(0.58rem, 2vw, 0.65rem); font-weight: 600; opacity: 0.92; }
     .day-header-info { flex: 1; min-width: 0; }
-    .day-header-title { font-size: 1rem; font-weight: 800; line-height: 1.25; color: var(--text-main); }
-    .day-header-sub { font-size: 0.74rem; color: var(--text-sub); margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .day-header-title { 
+      font-size: clamp(0.86rem, 3vw, 0.98rem); 
+      font-weight: 800; 
+      line-height: 1.25; 
+      color: var(--text-main); 
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .day-header-sub { 
+      font-size: clamp(0.68rem, 2.4vw, 0.74rem); 
+      color: var(--text-sub); 
+      margin-top: 2px; 
+      white-space: nowrap; 
+      overflow: hidden; 
+      text-overflow: ellipsis; 
+    }
     
     .timeline { display: flex; flex-direction: column; position: relative; padding-left: 2px; }
-    .timeline::before { content: ""; position: absolute; left: 48px; top: 10px; bottom: 10px; width: 2px; background: var(--timeline-line); border-radius: 1px; }
-    .timeline-row { display: flex; align-items: flex-start; gap: 14px; padding-bottom: 16px; position: relative; }
+    .timeline::before { content: ""; position: absolute; left: 44px; top: 10px; bottom: 10px; width: 2px; background: var(--timeline-line); border-radius: 1px; }
+    .timeline-row { display: flex; align-items: flex-start; gap: clamp(8px, 2.5vw, 12px); padding-bottom: 14px; position: relative; }
     .timeline-row:last-child { padding-bottom: 0; }
-    .timeline-time { font-weight: 800; font-variant-numeric: tabular-nums; width: 40px; flex-shrink: 0; font-size: 0.84rem; color: var(--text-sub); padding-top: 1px; text-align: right; }
-    .timeline-node { position: absolute; left: 45px; top: 6px; width: 8px; height: 8px; border-radius: 50%; background: var(--card-bg); border: 2px solid var(--accent-warm); z-index: 2; }
-    .timeline-content { flex: 1; padding-left: 6px; }
-    .timeline-spot-title { display: flex; align-items: center; flex-wrap: wrap; gap: 6px; margin-bottom: 2px; }
-    .place-link { color: var(--text-main); font-weight: 800; font-size: 0.94rem; cursor: pointer; border-bottom: 1.5px solid var(--accent); padding-bottom: 1px; text-decoration: none; }
+    .timeline-time { 
+      font-weight: 800; 
+      font-variant-numeric: tabular-nums; 
+      width: 38px; 
+      flex-shrink: 0; 
+      font-size: clamp(0.76rem, 2.6vw, 0.84rem); 
+      color: var(--text-sub); 
+      padding-top: 1px; 
+      text-align: right; 
+    }
+    .timeline-node { position: absolute; left: 41px; top: 6px; width: 8px; height: 8px; border-radius: 50%; background: var(--card-bg); border: 2px solid var(--accent-warm); z-index: 2; }
+    .timeline-content { flex: 1; min-width: 0; padding-left: 6px; }
+    .timeline-spot-title { 
+      display: flex; 
+      align-items: center; 
+      flex-wrap: wrap; 
+      gap: 4px 6px; 
+      margin-bottom: 2px; 
+    }
+    .place-link { 
+      color: var(--text-main); 
+      font-weight: 800; 
+      font-size: clamp(0.85rem, 3vw, 0.94rem); 
+      cursor: pointer; 
+      border-bottom: 1.5px solid var(--accent); 
+      padding-bottom: 1px; 
+      text-decoration: none; 
+      word-break: break-word;
+    }
     .place-link:active { opacity: 0.7; }
-    .transit-badge { display: inline-flex; align-items: center; font-size: 0.72rem; padding: 1px 7px; border-radius: 6px; background: var(--spot-card-bg); border: 1px solid var(--border); color: var(--text-sub); font-weight: 500; }
+    .transit-badge { 
+      display: inline-flex; 
+      align-items: center; 
+      font-size: clamp(0.65rem, 2.2vw, 0.72rem); 
+      padding: 1px 6px; 
+      border-radius: 6px; 
+      background: var(--spot-card-bg); 
+      border: 1px solid var(--border); 
+      color: var(--text-sub); 
+      font-weight: 500; 
+      word-break: break-all;
+    }
     
-    .info-btn { display: inline-flex; align-items: center; justify-content: center; width: 17px; height: 17px; border-radius: 50%; background: rgba(194, 65, 12, 0.08); color: var(--accent-warm); border: 1px solid rgba(194, 65, 12, 0.3); font-size: 0.68rem; font-weight: 800; cursor: pointer; user-select: none; line-height: 1; }
+    .info-btn { display: inline-flex; align-items: center; justify-content: center; width: 17px; height: 17px; border-radius: 50%; background: rgba(194, 65, 12, 0.08); color: var(--accent-warm); border: 1px solid rgba(194, 65, 12, 0.3); font-size: 0.68rem; font-weight: 800; cursor: pointer; user-select: none; line-height: 1; flex-shrink: 0; }
     .info-btn.active { background: var(--accent-warm); color: #fff; }
-    .spot-accordion-card { display: none; margin-top: 8px; padding: 10px 12px; background: var(--spot-card-bg); border-left: 3px solid var(--accent-warm); border-radius: 4px 10px 10px 4px; border-top: 1px solid var(--border); border-right: 1px solid var(--border); border-bottom: 1px solid var(--border); font-size: 0.81rem; line-height: 1.6; color: var(--text-main); }
+    .spot-accordion-card { 
+      display: none; 
+      margin-top: 6px; 
+      padding: 8px 10px; 
+      background: var(--spot-card-bg); 
+      border-left: 3px solid var(--accent-warm); 
+      border-radius: 4px 10px 10px 4px; 
+      border-top: 1px solid var(--border); 
+      border-right: 1px solid var(--border); 
+      border-bottom: 1px solid var(--border); 
+      font-size: clamp(0.76rem, 2.7vw, 0.81rem); 
+      line-height: 1.6; 
+      color: var(--text-main); 
+      word-break: break-word;
+    }
     .spot-accordion-card.open { display: block; animation: fadeIn 0.2s ease-out; }
     @keyframes fadeIn { from { opacity: 0; transform: translateY(-3px); } to { opacity: 1; transform: translateY(0); } }
 
-    .tag { display: inline-block; font-size: 0.68rem; font-weight: 600; padding: 1px 6px; border-radius: 6px; vertical-align: middle; }
+    .tag { display: inline-block; font-size: clamp(0.62rem, 2vw, 0.68rem); font-weight: 600; padding: 1px 5px; border-radius: 5px; vertical-align: middle; white-space: nowrap; }
     .tag-warn { background: var(--tag-red-bg); color: var(--tag-red-txt); border: 1px solid var(--tag-red-border); }
 
     /* 美食卡片 */
-    .food-grid { display: flex; flex-direction: column; gap: 9px; }
-    .food-item-card { border: 1px solid var(--border); border-radius: 12px; padding: 11px 13px; background: var(--spot-card-bg); }
-    .food-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; }
-    .food-name { font-size: 0.95rem; font-weight: 800; color: var(--text-main); }
-    .food-type { font-size: 0.72rem; font-weight: 700; color: var(--accent-warm); background: var(--accent-warm-bg); padding: 2px 7px; border-radius: 6px; }
-    .food-desc { font-size: 0.81rem; color: var(--text-sub); line-height: 1.5; }
+    .food-grid { display: flex; flex-direction: column; gap: 8px; }
+    .food-item-card { border: 1px solid var(--border); border-radius: 12px; padding: 10px 12px; background: var(--spot-card-bg); }
+    .food-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; gap: 6px; }
+    .food-name { font-size: clamp(0.88rem, 3.2vw, 0.95rem); font-weight: 800; color: var(--text-main); }
+    .food-type { font-size: clamp(0.65rem, 2.2vw, 0.72rem); font-weight: 700; color: var(--accent-warm); background: var(--accent-warm-bg); padding: 1px 6px; border-radius: 5px; white-space: nowrap; }
+    .food-desc { font-size: clamp(0.76rem, 2.7vw, 0.81rem); color: var(--text-sub); line-height: 1.5; word-break: break-word; }
 
     /* 抢票时刻与日历提醒按钮 */
-    .booking-grid { display: flex; flex-direction: column; gap: 10px; }
-    .booking-row { border: 1px solid var(--border); border-radius: 12px; padding: 12px; background: var(--spot-card-bg); }
-    .booking-target-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; flex-wrap: wrap; gap: 4px; }
-    .booking-target-name { font-weight: 700; font-size: 0.92rem; }
+    .booking-grid { display: flex; flex-direction: column; gap: 8px; }
+    .booking-row { border: 1px solid var(--border); border-radius: 12px; padding: 10px 12px; background: var(--spot-card-bg); }
+    .booking-target-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; flex-wrap: wrap; gap: 4px; }
+    .booking-target-name { font-weight: 700; font-size: clamp(0.84rem, 3vw, 0.92rem); word-break: break-word; }
     
     .booking-action-group {
       display: inline-flex;
       align-items: center;
-      gap: 6px;
+      gap: 5px;
+      flex-wrap: wrap;
     }
     .booking-op-time {
       font-weight: 800;
-      font-size: 0.78rem;
+      font-size: clamp(0.7rem, 2.4vw, 0.78rem);
       color: var(--accent-warm);
       background: var(--accent-warm-bg);
-      padding: 2px 8px;
-      border-radius: 6px;
+      padding: 1px 6px;
+      border-radius: 5px;
+      white-space: nowrap;
     }
     .add-cal-btn {
       display: inline-flex;
@@ -323,40 +500,52 @@
       background: var(--card-bg);
       border: 1px solid var(--accent-warm);
       color: var(--accent-warm);
-      font-size: 0.7rem;
+      font-size: clamp(0.65rem, 2.2vw, 0.7rem);
       font-weight: 700;
-      padding: 2px 7px;
-      border-radius: 6px;
+      padding: 2px 6px;
+      border-radius: 5px;
       cursor: pointer;
       text-decoration: none;
       transition: all 0.15s ease;
+      white-space: nowrap;
     }
     .add-cal-btn:active {
       background: var(--accent-warm);
       color: #fff;
       transform: scale(0.95);
     }
-    .booking-rule { font-size: 0.8rem; color: var(--text-sub); line-height: 1.45; margin-bottom: 6px; }
-    .booking-channel { font-size: 0.75rem; color: var(--text-muted); }
+    .booking-rule { font-size: clamp(0.75rem, 2.6vw, 0.8rem); color: var(--text-sub); line-height: 1.45; margin-bottom: 4px; word-break: break-word; }
+    .booking-channel { font-size: clamp(0.7rem, 2.4vw, 0.75rem); color: var(--text-muted); word-break: break-word; }
 
     /* 待办清单 */
-    .todo-list { list-style: none; display: flex; flex-direction: column; gap: 10px; }
-    .todo-item { display: flex; align-items: flex-start; gap: 10px; padding: 6px 4px; border-radius: 8px; cursor: pointer; user-select: none; }
-    .todo-checkbox { appearance: none; -webkit-appearance: none; width: 18px; height: 18px; border: 1.8px solid var(--border); border-radius: 5px; outline: none; background-color: var(--card-bg); cursor: pointer; flex-shrink: 0; margin-top: 3px; display: flex; align-items: center; justify-content: center; }
+    .todo-list { list-style: none; display: flex; flex-direction: column; gap: 8px; }
+    .todo-item { display: flex; align-items: flex-start; gap: 8px; padding: 4px 2px; border-radius: 6px; cursor: pointer; user-select: none; }
+    .todo-checkbox { appearance: none; -webkit-appearance: none; width: 17px; height: 17px; border: 1.8px solid var(--border); border-radius: 5px; outline: none; background-color: var(--card-bg); cursor: pointer; flex-shrink: 0; margin-top: 3px; display: flex; align-items: center; justify-content: center; }
     .todo-checkbox:checked { background-color: var(--accent-warm); border-color: var(--accent-warm); }
     .todo-checkbox:checked::after { content: ""; width: 4px; height: 8px; border: solid white; border-width: 0 2px 2px 0; transform: rotate(45deg) translate(-1px, -1px); }
-    .todo-text { font-size: 0.85rem; color: var(--text-main); line-height: 1.5; flex: 1; }
+    .todo-text { font-size: clamp(0.78rem, 2.8vw, 0.85rem); color: var(--text-main); line-height: 1.45; flex: 1; word-break: break-word; }
     .todo-item.completed .todo-text { color: var(--text-muted); text-decoration: line-through; }
     .todo-item.completed .todo-text strong { color: var(--text-muted); font-weight: 500; }
 
-    .static-list { list-style: none; font-size: 0.84rem; }
-    .static-list li { position: relative; padding-left: 18px; margin-bottom: 9px; color: var(--text-sub); line-height: 1.5; }
+    /* 贴士清单 */
+    .static-list { list-style: none; font-size: clamp(0.78rem, 2.8vw, 0.84rem); }
+    .static-list li { position: relative; padding-left: 15px; margin-bottom: 8px; color: var(--text-sub); line-height: 1.5; word-break: break-word; }
     .static-list li:last-child { margin-bottom: 0; }
-    .static-list li::before { content: ""; position: absolute; left: 5px; top: 8px; width: 5px; height: 5px; border-radius: 50%; background: var(--accent-warm); }
+    .static-list li::before { content: ""; position: absolute; left: 3px; top: 8px; width: 4px; height: 4px; border-radius: 50%; background: var(--accent-warm); }
     .static-list li strong { color: var(--text-main); font-weight: 700; }
 
-    .callout-box { background: var(--accent-warm-bg); border: 1px solid rgba(194, 65, 12, 0.2); border-radius: 12px; padding: 10px 12px; font-size: 0.78rem; color: var(--accent-warm); line-height: 1.45; margin-top: 10px; }
-    footer { text-align: center; font-size: 0.74rem; color: var(--text-muted); padding: 24px 0 12px; font-weight: 500; }
+    .callout-box { 
+      background: var(--accent-warm-bg); 
+      border: 1px solid rgba(194, 65, 12, 0.2); 
+      border-radius: 12px; 
+      padding: 8px 10px; 
+      font-size: clamp(0.72rem, 2.5vw, 0.78rem); 
+      color: var(--accent-warm); 
+      line-height: 1.45; 
+      margin-top: 8px; 
+      word-break: break-word;
+    }
+    footer { text-align: center; font-size: clamp(0.68rem, 2.2vw, 0.74rem); color: var(--text-muted); padding: 20px 0 10px; font-weight: 500; }
   </style>
 </head>
 <body>
@@ -368,7 +557,7 @@
     <p id="header-subtitle"></p>
   </header>
 
-  <!-- 倒计时模块 (支持乘车日关键车次/座位号高亮置顶) -->
+  <!-- 1. 倒计时模块 (唯一默认保持常开栏目) -->
   <section class="card focus-card" id="sec-focus">
     <div class="focus-badge" id="focus-badge-text">Next Target · 此刻关注</div>
     <div class="focus-event" id="target-title">行程监测中...</div>
@@ -391,14 +580,20 @@
     </div>
   </section>
 
-  <section class="card" id="sec-transport">
-    <div class="section-title">🚄 交通与住宿 (行程票夹)</div>
-    <div id="tickets-container"></div>
-    <div class="callout-box" id="ticket-note"></div>
-  </section>
+  <!-- 2. 交通与住宿 (默认折叠) -->
+  <details class="card" id="sec-transport">
+    <summary class="section-summary">
+      <span>🚄 交通与住宿 (行程票夹)</span>
+      <span class="arrow-icon"></span>
+    </summary>
+    <div class="details-body">
+      <div id="tickets-container"></div>
+      <div class="callout-box" id="ticket-note"></div>
+    </div>
+  </details>
 
-  <!-- 抢票时刻表 -->
-  <details class="card" id="sec-booking" open>
+  <!-- 3. 抢票时刻表 (默认折叠) -->
+  <details class="card" id="sec-booking">
     <summary class="section-summary">
       <span>📅 抢票与预约时刻表 (支持导入日历)</span>
       <span class="arrow-icon"></span>
@@ -408,9 +603,11 @@
     </div>
   </details>
 
+  <!-- 4. 每日行程 (所有天数默认折叠) -->
   <div id="days-container"></div>
 
-  <details class="card" id="sec-foods" open>
+  <!-- 5. 美食推荐 (默认折叠) -->
+  <details class="card" id="sec-foods">
     <summary class="section-summary">
       <span>🍲 武汉特色美食推荐 (必吃精选)</span>
       <span class="arrow-icon"></span>
@@ -420,7 +617,8 @@
     </div>
   </details>
 
-  <details class="card" id="sec-todo" open>
+  <!-- 6. 待办事项 (默认折叠) -->
+  <details class="card" id="sec-todo">
     <summary class="section-summary">
       <span>✅ 行前待办事项 (点击勾选)</span>
       <span class="arrow-icon"></span>
@@ -430,7 +628,7 @@
     </div>
   </details>
 
-  <!-- 实用贴士 -->
+  <!-- 7. 出行贴士 (默认折叠) -->
   <details class="card" id="sec-tips">
     <summary class="section-summary">
       <span>💡 实用出行贴士</span>
@@ -446,6 +644,22 @@
   <script src="./trip-data.js"></script>
 
   <script>
+    // ========================================================
+    // 🔗 胶囊导航点击代理：展开折叠卡片并平滑滚动
+    // ========================================================
+    function handleNavClick(targetId) {
+      const targetEl = document.getElementById(targetId);
+      if (!targetEl) return;
+      
+      // 若目标是折叠面板，点击标签时自动展开
+      if (targetEl.tagName.toLowerCase() === 'details') {
+        targetEl.open = true;
+      }
+      
+      // 平滑滚动至视口顶部对齐
+      targetEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+
     // ========================================================
     // 📅 小米/安卓深度兼容：原生日历 (.ics) 生成工具
     // ========================================================
@@ -533,19 +747,19 @@
       document.getElementById('header-subtitle').textContent = TRIP_DATA.meta.subtitle;
       document.getElementById('ticket-note').textContent = TRIP_DATA.meta.ticketNote || "⚠️ 购票提示：请提前录入乘车人信息并关注放票时间。";
 
-      // 药丸导航渲染（补齐【出行贴士】）
+      // 药丸导航渲染（绑定 handleNavClick 点击展开跳转）
       const navEl = document.getElementById('nav-container');
       let navHtml = `
-        <a class="nav-pill" href="#sec-transport">🚄 车票住宿</a>
-        <a class="nav-pill" href="#sec-booking">📅 抢票日程</a>
+        <span class="nav-pill" onclick="handleNavClick('sec-transport')">🚄 车票住宿</span>
+        <span class="nav-pill" onclick="handleNavClick('sec-booking')">📅 抢票日程</span>
       `;
       TRIP_DATA.days.forEach(d => {
-        navHtml += `<a class="nav-pill" href="#day-card-${d.dayIndex}">📌 ${d.dateText}行程</a>`;
+        navHtml += `<span class="nav-pill" onclick="handleNavClick('day-card-${d.dayIndex}')">📌 ${d.dateText}行程</span>`;
       });
       navHtml += `
-        <a class="nav-pill" href="#sec-foods">🍲 美食推荐</a>
-        <a class="nav-pill" href="#sec-todo">✅ 待办事项</a>
-        <a class="nav-pill" href="#sec-tips">💡 出行贴士</a>
+        <span class="nav-pill" onclick="handleNavClick('sec-foods')">🍲 美食推荐</span>
+        <span class="nav-pill" onclick="handleNavClick('sec-todo')">✅ 待办事项</span>
+        <span class="nav-pill" onclick="handleNavClick('sec-tips')">💡 出行贴士</span>
       `;
       navEl.innerHTML = navHtml;
 
@@ -589,8 +803,8 @@
                 <span>${item.badge}</span>
                 <span class="ticket-pill ${item.statusType}">${item.status}</span>
               </div>
-              <div style="font-weight:800;font-size:1.05rem;margin:6px 0 2px;">${item.hotelName}</div>
-              <div style="font-size:0.8rem;color:var(--text-sub);">${item.address}</div>
+              <div style="font-weight:800;font-size:clamp(0.95rem, 3.5vw, 1.05rem);margin:6px 0 2px;">${item.hotelName}</div>
+              <div style="font-size:clamp(0.74rem, 2.6vw, 0.8rem);color:var(--text-sub);">${item.address}</div>
               <div class="ticket-footer">
                 <span>${item.footerText}</span>
                 <a class="ticket-action" onclick="navTo(${item.geo.lng}, ${item.geo.lat}, '${item.geo.name}')">${item.actionText}</a>
@@ -626,7 +840,7 @@
       });
       bookingsEl.innerHTML = bookingsHtml;
 
-      // 每日行程渲染
+      // 每日行程渲染（默认不加 open，全部折叠）
       const daysEl = document.getElementById('days-container');
       let daysHtml = '';
       TRIP_DATA.days.forEach(d => {
@@ -635,7 +849,7 @@
           const spotKey = `spot-${d.dayIndex}-${rIdx}`;
           const titleHtml = row.geo
             ? `<span class="place-link" onclick="navTo(${row.geo.lng}, ${row.geo.lat}, '${row.geo.name}')">${row.title}</span>`
-            : `<span style="font-weight:700;font-size:0.92rem;">${row.title}</span>`;
+            : `<span style="font-weight:700;font-size:clamp(0.85rem, 3vw, 0.92rem);">${row.title}</span>`;
           
           const tagHtml = row.tag ? `<span class="tag tag-warn">${row.tag}</span>` : '';
           const infoBtnHtml = row.isSpot
@@ -663,7 +877,7 @@
         });
 
         daysHtml += `
-          <details class="card day-accordion-item" id="day-card-${d.dayIndex}" data-start="${d.startDate}" data-end="${d.endDate}">
+          <details class="card day-accordion-item" id="day-card-${d.dayIndex}">
             <summary class="section-summary">
               <div class="day-header-box">
                 <div class="date-stamp" style="background:${d.stampColor || '#e11d48'};">
@@ -725,7 +939,6 @@
       tipsEl.innerHTML = tipsHtml;
 
       loadTodoStates();
-      syncDayAccordionByTime();
       initCountdown();
     }
 
@@ -801,34 +1014,6 @@
       });
     }
 
-    function syncDayAccordionByTime() {
-      const now = new Date();
-      const dayCards = document.querySelectorAll('.day-accordion-item');
-      let activeFound = false;
-
-      dayCards.forEach((card, idx) => {
-        const start = new Date(card.getAttribute('data-start'));
-        const end = new Date(card.getAttribute('data-end'));
-
-        if (!activeFound && now >= start && now <= end) {
-          card.open = true;
-          activeFound = true;
-        } else if (!activeFound && idx === 0 && now < start) {
-          card.open = true;
-          activeFound = true;
-        } else {
-          card.open = false;
-        }
-      });
-
-      if (!activeFound && dayCards.length > 0) {
-        dayCards[dayCards.length - 1].open = true;
-      }
-    }
-
-    // ========================================================
-    // ⏱️ 「此刻关注」抢票优先与当天乘车高亮计算引擎
-    // ========================================================
     function initCountdown() {
       const bookingTargets = [];
       if (TRIP_DATA.bookings) {
@@ -855,7 +1040,6 @@
         isBooking: false
       }));
 
-      // 提取所有火车票数据
       const trainTickets = (TRIP_DATA.tickets || []).filter(t => t.type === 'transport');
 
       function update() {
@@ -863,10 +1047,8 @@
         const nowMonth = now.getMonth() + 1;
         const nowDate = now.getDate();
 
-        // 1. 检测当天是否有乘车计划
         let todayTrain = null;
         for (let t of trainTickets) {
-          // 匹配 badge 中的日期，例如 "9/30" 或 "10/3"
           const dateMatch = t.badge.match(/(\d{1,2})\/(\d{1,2})/);
           if (dateMatch) {
             const tMonth = parseInt(dateMatch[1]);
@@ -882,12 +1064,10 @@
         const badgeEl = document.getElementById("focus-badge-text");
         const titleEl = document.getElementById("target-title");
 
-        // 如果当天有乘车出发任务，激活专属高亮看板
         if (todayTrain) {
           trainBox.classList.add("active");
           badgeEl.textContent = "🚄 今日乘车提醒";
           
-          // 提取车次名称
           const trainNoMatch = todayTrain.badge.match(/([A-Z0-9]+)\s*次/);
           const trainNo = trainNoMatch ? trainNoMatch[1] : "火车专列";
           
@@ -900,7 +1080,6 @@
           trainBox.classList.remove("active");
         }
 
-        // 2. 目标倒计时选取逻辑
         let target = null;
         const upcomingBookings = bookingTargets.filter(b => b.time > now).sort((a, b) => a.time - b.time);
         if (upcomingBookings.length > 0) {
